@@ -379,6 +379,7 @@ export async function gateToolCall(
         checkerConfigured,
         newDestination: siteGate === "new",
         purchase: paying,
+        reviewFirst: name === "write_checkpoint",
       });
   if (plan === "deny") {
     await auditToolCall(ctx, name, "denied", {

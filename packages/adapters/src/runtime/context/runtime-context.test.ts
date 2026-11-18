@@ -5,6 +5,7 @@ import { getLogger } from "@rakazo/logging";
 import { describe, expect, it, vi } from "vitest";
 import { toHistory } from "../pi/pi-runtime-history.js";
 import { ContextBudgetError, ContextCacheTracker } from "./context-selection.js";
+import { CONTINUITY_LETTER_MARK, formatCompactedSummary } from "./history-compaction.prompt.js";
 import { createRuntimeContextPolicy } from "./runtime-context.js";
 
 const OFFERED = new Set(["shell", "SLACK_FIND_CHANNELS", "read_file"]);
@@ -895,6 +896,23 @@ describe("runtime context policy", () => {
       contextStrategy: "snapshots",
     }).prepareContext(context, model);
     expect(prepared.messages[0]!.content).toBe(summary);
+  });
+  it("preserves a continuity letter the same way, as the resident's own memory", () => {
+    const { request, context } = fixture();
+    const summary = formatCompactedSummary(`${CONTINUITY_LETTER_MARK}I kept the garden poem.`, 10);
+    request.history.unshift({ role: "user", content: summary });
+    context.messages.unshift({
+      role: "user",
+      content: summary,
+      timestamp: 0,
+      rakazoHistory: true,
+    } as Message);
+    const prepared = createRuntimeContextPolicy({
+      ...request,
+      contextStrategy: "snapshots",
+    }).prepareContext(context, model);
+    expect(prepared.messages[0]!.content).toBe(summary);
+    expect(summary).toContain("your memory of them, in your own words");
   });
   it("places a rolling summary after Pi's leading system message", () => {
     const { request, context } = fixture();

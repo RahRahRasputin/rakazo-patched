@@ -21,6 +21,7 @@ import { returnBotMessageOutcome } from "../../messaging/bot-messages.js";
 import { clearRoutineBackoff } from "../../routines/routine-backoff.js";
 import { isStrategicInitiativeRun } from "../../routines/strategic-initiative.js";
 import {
+  autoCompactionEnabled,
   COMPACTION_BATCH_SIZE,
   HISTORY_WINDOW_SIZE,
   shouldEnqueueCompaction,
@@ -352,6 +353,7 @@ async function enqueueHistoryCompaction(ctx: RunContext) {
       },
     });
     if (
+      autoCompactionEnabled() &&
       (deps.contextStrategy ?? DEFAULT_CONTEXT_STRATEGY) === "current" &&
       shouldEnqueueCompaction(
         updatedThread.nextMessageSeq,

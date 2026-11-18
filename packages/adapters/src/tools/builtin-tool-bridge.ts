@@ -68,7 +68,7 @@ const AREAS: Array<[area: string, matches: (name: string) => boolean]> = [
   ],
   ["skills", (name) => name.startsWith("skill_")],
   ["schedules", (name) => name.startsWith("schedule_")],
-  ["memory", (name) => name.includes("memory")],
+  ["memory", (name) => name.includes("memory") || name === "write_checkpoint"],
   [
     "media",
     (name) => name.startsWith("generate_") || name === "render_plot" || name === "save_page",

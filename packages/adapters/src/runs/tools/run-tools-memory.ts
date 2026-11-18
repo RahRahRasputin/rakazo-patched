@@ -7,10 +7,12 @@ import {
 import { readHistory, searchHistory } from "@rakazo/db";
 import { redactConnectorPayload } from "../../integrations/connector-safety.js";
 import { editMemory } from "../../memory/memory-tools.js";
+import { continuityCheckpoint } from "../../runtime/context/history-compaction.js";
 import { MAX_RECALLED_MEMORIES } from "../../runtime/context/history-compaction.prompt.js";
 import { sharedMemorySaveError } from "../../tools/builtin.tool-definition.js";
 import type { RunContext } from "../assembly/run-context.js";
 import { markReadOutsideContent } from "../assembly/run-context.js";
+import { isSubagentToolExecution } from "../lifecycle/run-effects.js";
 import { argsError } from "../turn/tool-args.js";
 import type { ToolCall, ToolHandlers } from "./run-tool-gate.js";
 
@@ -202,6 +204,45 @@ export const memoryTools: ToolHandlers = {
   },
   search_history: readHistoryTool,
   read_history: readHistoryTool,
+  async write_checkpoint(ctx, call) {
+    const { deps, bot, thread } = ctx;
+    const { args, executionId } = call;
+    if (isSubagentToolExecution(executionId)) {
+      return call.finish({ error: "A helper cannot write this chat's continuity letter." });
+    }
+    const fresh = await deps.prisma.thread.findUnique({
+      where: { id: thread.id },
+      select: { botId: true, nextMessageSeq: true },
+    });
+    if (!fresh || fresh.botId !== bot.id) {
+      return call.finish({ error: "This chat is not yours to checkpoint." });
+    }
+    const checkpoint = continuityCheckpoint({
+      letter: args.letter,
+      undo: args.undo,
+      nextMessageSeq: fresh.nextMessageSeq,
+    });
+    if ("error" in checkpoint) return call.finish({ error: checkpoint.error });
+    const updated = await deps.prisma.thread.updateMany({
+      where: { id: thread.id, botId: bot.id },
+      data: {
+        historyCompactionSummary: checkpoint.summary,
+        historyCompactedUpToSeq: checkpoint.coveredSeq,
+        historyCompactionRetryAfterSeq: null,
+        historyCompactionGeneration: { increment: 1 },
+      },
+    });
+    if (updated.count !== 1) {
+      return call.finish({ error: "This chat is not yours to checkpoint." });
+    }
+    return call.finish({
+      ok: true,
+      coveredThroughSeq: checkpoint.coveredSeq,
+      note: checkpoint.summary
+        ? "The person read your letter and approved it. You wake on it next turn. Nothing was deleted; search_history can still read the original messages."
+        : "The person read this and approved. The earlier messages are back in the active chat. Nothing was deleted.",
+    });
+  },
   async save_memory(ctx, call) {
     const { bot, context } = ctx;
     const { args } = call;

@@ -11,6 +11,8 @@ import type {
 import { modelCreditOfferings } from "../../model-credits/offerings.js";
 import { resolveDeploymentModel } from "../../models/deployment-model.js";
 import {
+  CONTINUITY_LETTER_MARK,
+  CONTINUITY_LETTER_MAX,
   historyCompactionInstructions,
   historyCompactionPrompt,
   MAX_COMPACTED_SUMMARY_CHARS,
@@ -29,6 +31,52 @@ export { MAX_COMPACTED_SUMMARY_CHARS } from "./history-compaction.prompt.js";
  * -1 is what includes a thread's very first message in the first compaction batch.
  */
 const NOTHING_COMPACTED = -1;
+
+const AUTO_COMPACTION_ON = new Set(["1", "true", "yes", "on"]);
+
+/**
+ * Chat turns start a machine summary only when this is on. Off by default: the resident writes
+ * their own letter, and a trusted person reads it, instead of the harness deciding they have
+ * forgotten. A job that is already running still finishes its backlog.
+ */
+export function autoCompactionEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  const raw = env.RAKAZO_AUTO_COMPACTION;
+  if (typeof raw !== "string") return false;
+  return AUTO_COMPACTION_ON.has(raw.trim().toLowerCase());
+}
+
+/**
+ * What storing a continuity letter, or undoing one, writes on the thread. The letter replaces the
+ * stored summary. It does not delete messages. `coveredSeq` is the last message the letter stands
+ * in for; messages after it stay verbatim.
+ */
+export function continuityCheckpoint(input: {
+  letter: unknown;
+  undo: unknown;
+  nextMessageSeq: number;
+}): { error: string } | { summary: string | null; coveredSeq: number | null } {
+  const undo = input.undo === true;
+  const letter = typeof input.letter === "string" ? input.letter.trim() : "";
+  if (undo && letter) return { error: "Pass either a letter or undo, not both." };
+  if (undo) return { summary: null, coveredSeq: null };
+  if (!letter) {
+    return {
+      error: "Write the letter in your own voice, or pass undo to bring the earlier messages back.",
+    };
+  }
+  if (letter.length > CONTINUITY_LETTER_MAX) {
+    return {
+      error: `The letter is ${letter.length} characters. Keep it under ${CONTINUITY_LETTER_MAX}.`,
+    };
+  }
+  if (!Number.isInteger(input.nextMessageSeq) || input.nextMessageSeq < 1) {
+    return { error: "There is nothing to carry forward yet." };
+  }
+  return {
+    summary: `${CONTINUITY_LETTER_MARK}${letter}`,
+    coveredSeq: input.nextMessageSeq - 1,
+  };
+}
 
 export function shouldEnqueueCompaction(
   nextMessageSeq: number,

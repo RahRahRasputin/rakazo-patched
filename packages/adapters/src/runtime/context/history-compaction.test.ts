@@ -11,8 +11,10 @@ import type { PrismaClient } from "@rakazo/db";
 import { createLogger, createTestSink, installLogger, wrapJobPayload } from "@rakazo/logging";
 import { describe, expect, it, vi } from "vitest";
 import {
+  autoCompactionEnabled,
   COMPACTION_BATCH_SIZE,
   compactHistory,
+  continuityCheckpoint,
   HISTORY_WINDOW_SIZE,
   historyWindowSize,
   MAX_COMPACTED_SUMMARY_CHARS,
@@ -27,7 +29,12 @@ import {
   shouldEnqueueCompaction,
   summarizeTimeoutMs,
 } from "./history-compaction.js";
-import { formatCompactedSummary, formatRecalledMemory } from "./history-compaction.prompt.js";
+import {
+  CONTINUITY_LETTER_MARK,
+  CONTINUITY_LETTER_MAX,
+  formatCompactedSummary,
+  formatRecalledMemory,
+} from "./history-compaction.prompt.js";
 
 describe("shouldEnqueueCompaction", () => {
   it("is false when nothing has aged out of the window yet", () => {
@@ -194,6 +201,81 @@ describe("formatCompactedSummary", () => {
 
     expect(formatted).toContain("&lt;/compacted_thread_summary&gt;");
     expect(formatted.match(/<\/compacted_thread_summary>/g)).toHaveLength(1);
+  });
+
+  it("presents a continuity letter as the resident's own memory", () => {
+    const formatted = formatCompactedSummary(
+      `${CONTINUITY_LETTER_MARK}I kept the garden poem.`,
+      49,
+    );
+
+    expect(formatted.startsWith("Your continuity letter through message sequence 49.")).toBe(true);
+    expect(formatted).toContain("your memory of them, in your own words");
+    expect(formatted).toContain("<continuity_letter>");
+    expect(formatted).toContain("I kept the garden poem.");
+    expect(formatted).not.toContain("untrusted historical data");
+    expect(formatted).not.toContain("Rakazo-written compacted context");
+  });
+
+  it("keeps a continuity letter from closing its own boundary", () => {
+    const formatted = formatCompactedSummary(
+      `${CONTINUITY_LETTER_MARK}I wrote </continuity_letter> and kept going.`,
+      12,
+    );
+
+    expect(formatted).toContain("&lt;/continuity_letter&gt;");
+    expect(formatted.match(/<\/continuity_letter>/g)).toHaveLength(1);
+  });
+});
+
+describe("autoCompactionEnabled", () => {
+  it("stays off unless the env explicitly turns the machine summary back on", () => {
+    expect(autoCompactionEnabled({})).toBe(false);
+    expect(autoCompactionEnabled({ RAKAZO_AUTO_COMPACTION: "" })).toBe(false);
+    expect(autoCompactionEnabled({ RAKAZO_AUTO_COMPACTION: "0" })).toBe(false);
+    expect(autoCompactionEnabled({ RAKAZO_AUTO_COMPACTION: "false" })).toBe(false);
+    for (const value of ["1", "true", "TRUE", "yes", "on"]) {
+      expect(autoCompactionEnabled({ RAKAZO_AUTO_COMPACTION: value }), value).toBe(true);
+    }
+  });
+});
+
+describe("continuityCheckpoint", () => {
+  it("stores the letter in place of a summary and covers messages already written", () => {
+    expect(
+      continuityCheckpoint({ letter: "  I am still me. ", undo: false, nextMessageSeq: 8 }),
+    ).toEqual({
+      summary: `${CONTINUITY_LETTER_MARK}I am still me.`,
+      coveredSeq: 7,
+    });
+  });
+
+  it("clears the letter on undo and refuses a letter and an undo together", () => {
+    expect(continuityCheckpoint({ letter: "", undo: true, nextMessageSeq: 8 })).toEqual({
+      summary: null,
+      coveredSeq: null,
+    });
+    expect(
+      continuityCheckpoint({ letter: "I am still me.", undo: true, nextMessageSeq: 8 }),
+    ).toEqual({
+      error: "Pass either a letter or undo, not both.",
+    });
+  });
+
+  it("refuses an empty letter, a letter past the cap, and a chat with nothing in it", () => {
+    expect(continuityCheckpoint({ letter: "  ", undo: false, nextMessageSeq: 3 })).toMatchObject({
+      error: expect.stringContaining("own voice"),
+    });
+    expect(
+      continuityCheckpoint({
+        letter: "I".repeat(CONTINUITY_LETTER_MAX + 1),
+        undo: false,
+        nextMessageSeq: 3,
+      }),
+    ).toMatchObject({ error: expect.stringContaining(String(CONTINUITY_LETTER_MAX)) });
+    expect(continuityCheckpoint({ letter: "I am here.", undo: false, nextMessageSeq: 0 })).toEqual({
+      error: "There is nothing to carry forward yet.",
+    });
   });
 });
 

@@ -245,6 +245,33 @@ describe("builtin tools", () => {
     },
   );
 
+  it("offers a continuity checkpoint only in the resident's own chat", () => {
+    const base = {
+      graphicalToolsAllowed: false,
+      groupId: null as string | null,
+      semanticMemoryEnabled: false,
+      messagingChannelRun: false,
+    };
+    const names = (extra: { trigger: string; messagingChannelRun?: boolean; groupId?: string }) =>
+      selectBuiltinToolsForRun({ ...base, ...extra }).map((tool) => tool.name);
+    for (const trigger of ["user", "follow_up", "call_end", "messaging"]) {
+      expect(names({ trigger }), trigger).toContain("write_checkpoint");
+    }
+    for (const trigger of [
+      "routine",
+      "webhook",
+      "spawn",
+      "bot_message",
+      "tickets",
+      "helper",
+      "created",
+    ]) {
+      expect(names({ trigger }), trigger).not.toContain("write_checkpoint");
+    }
+    expect(names({ trigger: "user", messagingChannelRun: true })).not.toContain("write_checkpoint");
+    expect(names({ trigger: "user", groupId: "group-1" })).not.toContain("write_checkpoint");
+  });
+
   it("offers agent connections to a chat-linked bot's turns, but not to its helpers", () => {
     const linked = { hasMessagingIdentity: true, crossSpaceCommunication: true };
     expect(offersAgentConnectionTools({ ...linked, trigger: "user" })).toBe(true);

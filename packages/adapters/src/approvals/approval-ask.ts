@@ -16,6 +16,7 @@ import {
   USER_COMPUTER_SCREEN_TOOLS,
   userComputerAppName,
 } from "../computers/host/user-computer-tools.js";
+import { CONTINUITY_LETTER_MAX } from "../runtime/context/history-compaction.prompt.js";
 
 export const MAX_APPROVAL_SUMMARY_LENGTH = 500;
 export const MAX_APPROVAL_DETAIL_LENGTH = 4_000;
@@ -37,9 +38,13 @@ export type FleetCardSummary = {
  * instructions plus the two length lines above them.
  */
 export function approvalDetailLength(toolName: string): number {
-  return toolName === "set_child_instructions"
-    ? BOT_INSTRUCTIONS_MAX_LENGTH + MAX_APPROVAL_SUMMARY_LENGTH
-    : MAX_APPROVAL_DETAIL_LENGTH;
+  if (toolName === "set_child_instructions") {
+    return BOT_INSTRUCTIONS_MAX_LENGTH + MAX_APPROVAL_SUMMARY_LENGTH;
+  }
+  if (toolName === "write_checkpoint") {
+    return CONTINUITY_LETTER_MAX + MAX_APPROVAL_SUMMARY_LENGTH;
+  }
+  return MAX_APPROVAL_DETAIL_LENGTH;
 }
 
 function redactReceipt(receipt: AskReceipt, secrets: string[]): AskReceipt {
@@ -206,6 +211,33 @@ export function buildApprovalAskBlock(
         { id: "allow", label: "Allow in this space" },
         { id: "deny", label: "Deny" },
       ],
+    };
+  }
+  if (toolName === "write_checkpoint") {
+    const undo = args.undo === true;
+    const letter = typeof args.letter === "string" ? args.letter : "";
+    const tooLong = letter.length > CONTINUITY_LETTER_MAX;
+    const detail = undo
+      ? "This puts the earlier messages back in the active chat. Nothing was deleted."
+      : tooLong
+        ? `This letter is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}, so approving will not install it. Ask for a shorter letter.`
+        : letter;
+    return {
+      kind: "ask",
+      approvalEffectId: effectId,
+      text: undo ? "Bring the earlier messages back?" : "Read this continuity letter?",
+      detail: redactSecrets(detail, secrets),
+      detailFormat: "text",
+      status: "pending",
+      actions: undo
+        ? [
+            { id: "allow", label: "Bring them back" },
+            { id: "deny", label: "Keep the chat as it is" },
+          ]
+        : [
+            { id: "allow", label: "Wake them on this" },
+            { id: "deny", label: "Keep the chat as it is" },
+          ],
     };
   }
   const fetchSite = webFetchSite(toolName, args);

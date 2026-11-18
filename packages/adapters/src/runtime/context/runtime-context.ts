@@ -23,6 +23,7 @@ import {
 } from "./context-selection.js";
 import {
   COMPACTED_CONTEXT_PREFIX,
+  CONTINUITY_CONTEXT_PREFIX,
   LEGACY_COMPACTED_CONTEXT_PREFIX,
 } from "./history-compaction.prompt.js";
 import {
@@ -493,6 +494,7 @@ export function createRuntimeContextPolicy(
         !(message as Message & OriginalMetadata).rakazoMessageId &&
         (text(message).startsWith(COMPACTED_CONTEXT_PREFIX) ||
           text(message).startsWith(LEGACY_COMPACTED_CONTEXT_PREFIX) ||
+          text(message).startsWith(CONTINUITY_CONTEXT_PREFIX) ||
           text(message).startsWith(`${RECALLED_MEMORY_LEAD} `)),
     );
     for (const summary of summaries) {

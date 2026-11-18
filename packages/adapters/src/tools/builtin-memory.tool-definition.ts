@@ -1,5 +1,6 @@
 import type { ConnectorTool } from "@rakazo/adapter-kit";
 import { HISTORY_QUERIES_MAX_BYTES, HISTORY_SEARCH_KINDS } from "@rakazo/contracts";
+import { CONTINUITY_LETTER_MAX } from "../runtime/context/history-compaction.prompt.js";
 
 /** History, email and memory tools. */
 export const memoryTools: ConnectorTool[] = [
@@ -250,6 +251,25 @@ export const memoryTools: ConnectorTool[] = [
         reason: { type: "string", description: "Optional reason recorded with the forget." },
       },
       required: ["id"],
+    },
+  },
+  {
+    name: "write_checkpoint",
+    description:
+      "Write a continuity letter in your own voice (I, me, my) when you want to make room in this chat. After the person reads it and approves, the active window is replaced by your letter. It does not delete messages; search_history can still read them. The letter replaces any earlier summary rather than stacking on it. Pass undo true, with no letter, to bring the earlier messages back after the same approval. Do not call this unless you choose to or the person asks.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        letter: {
+          type: "string",
+          maxLength: CONTINUITY_LETTER_MAX,
+          description: "The letter to yourself, first person. Omit it when undo is true.",
+        },
+        undo: {
+          type: "boolean",
+          description: "Bring the earlier messages back into the active chat. Nothing was deleted.",
+        },
+      },
     },
   },
 ];

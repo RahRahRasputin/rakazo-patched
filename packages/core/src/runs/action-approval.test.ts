@@ -482,6 +482,14 @@ describe("planActionGate", () => {
       ...overrides,
     });
 
+  it("asks to read a continuity letter even in Never ask, and still refuses a block", () => {
+    expect(gate("never", { reviewFirst: true })).toBe("ask");
+    expect(gate("auto", { reviewFirst: true })).toBe("ask");
+    expect(gate("ask", { reviewFirst: true, consequential: false })).toBe("ask");
+    expect(gate("never", { reviewFirst: true, resolved: allowed })).toBe("ask");
+    expect(gate("never", { reviewFirst: true, resolved: blocked })).toBe("deny");
+  });
+
   it("runs an unlisted change in Never ask, judges it in Auto and asks in Ask", () => {
     expect(gate("never")).toBe("allow");
     expect(gate("auto")).toBe("judge");
@@ -1032,6 +1040,12 @@ it("classifies schedule_update like schedule_create", () => {
 it("requires human confirmation to approve an agent connection", () => {
   expect(toolRequiresExplicitApproval("respond_agent_connection")).toBe(true);
   expect(toolRequiresApproval("respond_agent_connection", false)).toBe(true);
+});
+
+it("asks a person to read a continuity letter, and the confirmation does not taint the run", () => {
+  expect(toolRequiresApproval("write_checkpoint", false)).toBe(true);
+  expect(toolRequiresExplicitApproval("write_checkpoint")).toBe(true);
+  expect(toolResultTaintsRun("write_checkpoint")).toBe(false);
 });
 
 describe("repeatsDeniedAction", () => {

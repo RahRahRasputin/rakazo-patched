@@ -93,6 +93,8 @@ const EXPLICIT_APPROVAL_BUILTIN_TOOLS = new Set([
   "claim_email_address",
   "respond_agent_connection",
   "set_child_instructions",
+  // The person reads the letter before the resident wakes on it. Never ask still shows the card.
+  "write_checkpoint",
 ]);
 
 const READ_ONLY_CONNECTOR_PATTERN = /(^|[_-])(get|list|search|find|read)([_-]|$)/i;
@@ -297,6 +299,7 @@ const OWN_STATE_RESULT_TOOLS = new Set([
   "skill_update",
   "task_catalog",
   "update_preferences",
+  "write_checkpoint",
   "write_file",
 ]);
 
@@ -633,8 +636,14 @@ export function planActionGate(input: {
   newDestination?: boolean;
   /** A click that completes a purchase: a person approves it each time in Ask and Auto. */
   purchase?: boolean;
+  /**
+   * A person reads this before it runs, including in Never ask. A block still refuses it.
+   * Other explicit tools keep Never ask's existing behavior; this is for a continuity letter.
+   */
+  reviewFirst?: boolean;
 }): "ask" | "allow" | "judge" | "deny" {
   if (input.resolved.decision === "deny") return "deny";
+  if (input.reviewFirst) return "ask";
   if (input.mode === "never") return input.steerable ? "deny" : "allow";
   if (input.purchase || input.mandatory) return "ask";
   if (input.resolved.decision === "ask") return "ask";

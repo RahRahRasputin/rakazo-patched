@@ -64,6 +64,21 @@ export const FLEET_WRITE_TOOL_NAMES_SET: ReadonlySet<string> = new Set(FLEET_WRI
  */
 const CREATED_RUN_TOOL_NAMES = new Set(["ask_user", "update_bot"]);
 
+/** A continuity letter belongs to the resident's own chat, not a schedule, webhook, helper, or channel. */
+function continuityCheckpointOffered(options: {
+  trigger: string;
+  messagingChannelRun: boolean;
+  groupId: string | null;
+}): boolean {
+  if (options.messagingChannelRun || options.groupId) return false;
+  return (
+    options.trigger === "user" ||
+    options.trigger === "follow_up" ||
+    options.trigger === "call_end" ||
+    options.trigger === "messaging"
+  );
+}
+
 /** Delegation stays one level deep; account settings and direct replies remain the parent's. */
 export const SUBAGENT_HIDDEN_TOOLS: ReadonlySet<string> = new Set([
   "run_subagent",
@@ -211,6 +226,7 @@ export function selectBuiltinToolsForRun(options: {
         tool.name !== "call_user") &&
       (options.historyRetrievalEnabled ||
         !["search_history", "read_history"].includes(tool.name)) &&
+      (tool.name !== "write_checkpoint" || continuityCheckpointOffered(options)) &&
       (!options.messagingChannelRun ||
         (!SCHEDULE_TOOL_NAMES.has(tool.name) &&
           !SKILL_TOOL_NAMES.has(tool.name) &&
@@ -221,6 +237,7 @@ export function selectBuiltinToolsForRun(options: {
             "recall_memory",
             "forget_memory",
             "reflect_memory",
+            "write_checkpoint",
             "task_catalog",
             "board_tickets",
           ].includes(tool.name) &&

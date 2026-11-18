@@ -13,7 +13,12 @@ import { loadBotGroupDirectory } from "../../bots/group-handoff.js";
 import { parsePlaybook } from "../../bots/teaching-session.js";
 import { lateRoutineRunInstruction } from "../../routines/routine-lateness.prompt.js";
 import { routineRunInstruction } from "../../routines/routine-run.prompt.js";
-import { formatCompactedSummary } from "../../runtime/context/history-compaction.prompt.js";
+import { contextRoomNote, contextRoomRatio } from "../../runtime/context/context-room.prompt.js";
+import { estimateContextTokens } from "../../runtime/context/context-selection.js";
+import {
+  formatCompactedSummary,
+  isContinuityLetter,
+} from "../../runtime/context/history-compaction.prompt.js";
 import { inferScript } from "../../runtime/scripted-runtime.js";
 import { partitionTools } from "../../tools/builtin-tool-bridge.js";
 import type { FleetRun } from "../../tools/fleet-tools.js";
@@ -270,7 +275,7 @@ export async function buildTurnPrompt(
   const { takeoverResume } = hold.takeover;
   const { checkpointModelResolver, savedComputerMode } = parts.saved;
   let { turnCheckpoint } = parts.saved;
-  const { agentSkills, nonOwnerChatRun, savedSkills, task, thread, conversationThread } =
+  const { agentSkills, bot, nonOwnerChatRun, savedSkills, task, thread, conversationThread } =
     parts.records;
   const { connectedPlugins, context } = parts.connected;
   const { compactedHistory, people } = parts.thread;
@@ -338,15 +343,16 @@ export async function buildTurnPrompt(
       );
   const replyContext = await loadReplyContext(deps.prisma, thread.id, run.sourceMessageId);
   let userTimeZone: string | null | undefined;
+  let personName: string | null | undefined;
   try {
-    userTimeZone = (
-      await deps.prisma.user.findUnique({
-        where: { id: run.userId },
-        select: { timezone: true },
-      })
-    )?.timezone;
+    const person = await deps.prisma.user.findUnique({
+      where: { id: run.userId },
+      select: { timezone: true, name: true },
+    });
+    userTimeZone = person?.timezone;
+    personName = person?.name;
   } catch {
-    // Timezone is optional context; a lookup failure must not prevent a run.
+    // Timezone and name are optional context; a lookup failure must not prevent a run.
   }
   let routineNote: string | undefined;
   let lateRoutineNote: string | undefined;
@@ -420,6 +426,23 @@ export async function buildTurnPrompt(
       )
     : history;
   const runtimeHistory = [...historicalContext, ...historyWithImages];
+  let roomNote: string | undefined;
+  try {
+    roomNote = contextRoomNote({
+      name: bot.name,
+      personName,
+      ratio: contextRoomRatio({
+        tokenEstimate: estimateContextTokens(runtimeHistory) + estimateContextTokens(prompt),
+        contextWindow: resolved.contextWindow,
+        nextMessageSeq: thread.nextMessageSeq,
+        letterInstalled:
+          compactedHistory.usedLocalSummary && isContinuityLetter(compactedHistory.summary),
+      }),
+    });
+  } catch {
+    // A room warning is optional. Failing to measure the window must not stop the turn.
+  }
+  const turnPrompt = roomNote ? `${prompt}\n\n${roomNote}` : prompt;
   const groupDirectory = conversationThread.groupId
     ? undefined
     : await loadBotGroupDirectory(deps.prisma, run);
@@ -431,7 +454,7 @@ export async function buildTurnPrompt(
     taughtSkillsLine,
     agentSkillsLine,
     taskPrompt,
-    prompt,
+    prompt: turnPrompt,
     historicalContext,
     runtimeHistory,
     botDirectory,

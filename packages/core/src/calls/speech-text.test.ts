@@ -301,6 +301,7 @@ describe("narrateTool", () => {
     expect(narrateTool("create_group")).toBe("creating a group");
     expect(narrateTool("update_group")).toBe("updating a group");
     expect(narrateTool("set_child_instructions")).toBe("rewriting a bot's instructions");
+    expect(narrateTool("write_checkpoint")).toBe("writing a continuity letter");
   });
 
   it("sees through an MCP tool prefix", () => {

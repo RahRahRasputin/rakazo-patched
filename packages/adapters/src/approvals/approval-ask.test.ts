@@ -263,6 +263,30 @@ describe("bot management approval cards", () => {
     });
   });
 
+  it("shows a continuity letter whole, and never offers to always allow it", () => {
+    const letter = "I".repeat(5_000);
+    const block = buildApprovalAskBlock("effect-1", "write_checkpoint", { letter }, ["sk-secret"]);
+    if (block.kind !== "ask") throw new Error("expected ask block");
+    expect(block.text).toBe("Read this continuity letter?");
+    expect(block.detail).toBe(letter);
+    expect(block.actions).toEqual([
+      { id: "allow", label: "Wake them on this" },
+      { id: "deny", label: "Keep the chat as it is" },
+    ]);
+    const secret = buildApprovalAskBlock(
+      "effect-1",
+      "write_checkpoint",
+      { letter: "I remember sk-secret." },
+      ["sk-secret"],
+    );
+    if (secret.kind !== "ask") throw new Error("expected ask block");
+    expect(secret.detail).not.toContain("sk-secret");
+    const undo = buildApprovalAskBlock("effect-1", "write_checkpoint", { undo: true }, []);
+    if (undo.kind !== "ask") throw new Error("expected ask block");
+    expect(undo.text).toBe("Bring the earlier messages back?");
+    expect(undo.actions?.[0]?.label).toBe("Bring them back");
+  });
+
   it("shows the longest allowed instructions whole on the instruction card", () => {
     const instructions = "i".repeat(20_000);
     const lines = ["Old length: 0 characters", "New length: 20000 characters", "", instructions];
