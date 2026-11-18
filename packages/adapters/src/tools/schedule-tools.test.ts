@@ -1404,7 +1404,7 @@ describe("updateScheduleFromTool", () => {
     });
     await expect(update({ schedule: { cron: "0 9 * * *" } })).resolves.toEqual({
       error:
-        "This routine is a watch: it checks every watch.everyMinutes minutes and has no schedule, so schedule_update can only change its name, prompt or active. The user can change how often it checks in the routine's settings on the web. Do not cancel and recreate it for this.",
+        "This routine is a watch: it checks every watch.everyMinutes minutes and has no schedule, so schedule_update can only change its name, prompt or active. The person can change how often it checks in the routine's settings on the web. Do not cancel and recreate it for this.",
     });
     await expect(update({ name: "Inbox" })).resolves.toMatchObject({ ok: true, name: "Inbox" });
   });

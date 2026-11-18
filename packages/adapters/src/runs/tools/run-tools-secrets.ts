@@ -197,16 +197,16 @@ export const secretTools: ToolHandlers = {
           ...botSecretToolView(siteLogin),
           ...(await loginToolHints(deps.prisma, deps.secretStore, run, siteLogin.name)),
         });
-      // A card shows neither a login's authenticator key nor its other sites, which only its
-      // owner sets, for the site it has. So a card never moves a login that has them: its
-      // owner changes the site in the Vault, where both are in sight.
+      // A card shows neither a login's authenticator key nor its other sites, which only the
+      // person sets, for the site it has. So a card never moves a login that has them: the
+      // person changes the site in the Vault, where both are in sight.
       if (replaces) {
         const kept = await loginToolHints(deps.prisma, deps.secretStore, run, destination.name);
         if (kept.alsoOn || kept.authenticatorCode)
           return call.finish({
             error:
               `The login ${destination.name} has an authenticator key or other sites, which ` +
-              "only the user sets, so a card can't move it to another site. Ask the user to " +
+              "only the person sets, so a card can't move it to another site. Ask the person to " +
               "change its site in the Vault, or use another name for a different account.",
           });
       }
@@ -273,7 +273,7 @@ export const secretTools: ToolHandlers = {
         return call.finish({
           ok: true,
           submitted: true,
-          note: "The user entered the code. Type it with browser_act fill_code {ref}; you never see it.",
+          note: "The person entered the code. Type it with browser_act fill_code {ref}; you never see it.",
         });
       }
       // Claim executing (above), take the secret, then connector complete().

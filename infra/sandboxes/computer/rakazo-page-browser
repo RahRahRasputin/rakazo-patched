@@ -1855,10 +1855,10 @@ def finish_later(pending: list[dict[str, str]], seconds: float = FINISH_LATER_SE
 
 # -- purchases ----------------------------------------------------------------------------------------
 
-PURCHASE_CHANGED = ("The page changed since the user approved this purchase, so the click was not made. "
-                    "Call browser_act again with only this click; that asks the user again.")
-PURCHASE_REFUSED = ("This click would complete a purchase, so the user must approve it. "
-                    "Call browser_act again with only this click; that asks the user.")
+PURCHASE_CHANGED = ("The page changed since the person approved this purchase, so the click was not made. "
+                    "Call browser_act again with only this click; that asks the person again.")
+PURCHASE_REFUSED = ("This click would complete a purchase, so the person must approve it. "
+                    "Call browser_act again with only this click; that asks the person.")
 
 # The click that pays, books or orders is the one the user must approve. Read in page_secrets' isolated
 # world, so the page cannot hide a button or fake an approval; it can only word its own text.
@@ -2477,7 +2477,7 @@ def purchase_refusal(step: dict[str, Any], site: str, buying: dict[str, Any] | N
         return None
     if buying.get("amount") == "?" or buying.get("total") == "?":
         return {"ok": False, "completed": completed, "uncertain": False,
-                "error": "The checkout total is ambiguous. Ask the user to verify the price and complete the payment manually."}
+                "error": "The checkout total is ambiguous. Ask the person to verify the price and complete the payment manually."}
     approved = step.get("approved") is True and step.get("site") == site
     # A total the card showed beside the button (empty when it showed none) must still be the page's.
     changed = approved and any(key in step and shown(step[key]) != shown(buying.get(key, ""))

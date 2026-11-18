@@ -26,7 +26,7 @@ describe("taughtSkillsInstruction", () => {
         { name: "Book travel", whenToUse: "Book a trip" },
       ]),
     ).toBe(
-      "Saved taught skills:\n- File expenses: When a receipt arrives\n- Book travel: Book a trip\nWhen the user asks to run a taught skill by name, follow that skill's playbook exactly. The full playbook is included in the user task when they invoke it.",
+      "Saved taught skills:\n- File expenses: When a receipt arrives\n- Book travel: Book a trip\nWhen the person asks to run a taught skill by name, follow that skill's playbook exactly. The full playbook is included in their message when they invoke it.",
     );
   });
 

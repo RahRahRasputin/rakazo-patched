@@ -299,7 +299,7 @@ afterEach(() => {
 describe("request_secret for a website login", () => {
   it("tells the bot a login may not be saved", () => {
     const tool = builtinAgentTools.find((entry) => entry.name === "request_secret")!;
-    expect(tool.description).toContain("The user may choose not to save a login");
+    expect(tool.description).toContain("The person may choose not to save a login");
   });
 
   it("returns a saved login as before", async () => {
@@ -494,7 +494,7 @@ describe("request_secret for a login saved for another site", () => {
         saved,
       });
       expect(toolResults).toEqual([
-        { error: expect.stringContaining("Ask the user to change its site in the Vault") },
+        { error: expect.stringContaining("Ask the person to change its site in the Vault") },
       ]);
       expect(JSON.stringify(toolResults)).not.toContain(otp);
       expect(cards).toEqual([]);

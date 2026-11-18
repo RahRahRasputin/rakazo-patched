@@ -498,7 +498,7 @@ describe("inbound email route", () => {
       trigger: string;
     };
     expect(sent.trigger).toBe("webhook");
-    expect(sent.prompt.startsWith("[Email from your owner]")).toBe(true);
+    expect(sent.prompt.startsWith("[Email from your person]")).toBe(true);
     expect(sent.prompt).toContain('"id": "email-1"');
     expect(sent.prompt).not.toContain("Run routine");
     expect((sent as unknown as { blocks: unknown[] }).blocks[0]).toEqual({ kind: "delivery" });

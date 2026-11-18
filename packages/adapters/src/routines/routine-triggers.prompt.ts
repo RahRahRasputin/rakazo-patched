@@ -1,6 +1,6 @@
-/** Where the user finds what a sender needs; the key itself never reaches the bot. */
+/** Where the person finds what a sender needs; the key itself never reaches the bot. */
 export const ROUTINE_WEBHOOK_SETUP_NOTE =
-  "The user copies the URL and key from this routine in Routines on the web or desktop app. Never ask them for the key.";
+  "The person copies the URL and key from this routine in Routines on the web or desktop app. Never ask them for the key.";
 
 /** A chat trigger takes each message in that app, so the bot stops replying there as usual. */
 export const ROUTINE_CHAT_TRIGGER_NOTE =

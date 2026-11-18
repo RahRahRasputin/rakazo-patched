@@ -164,12 +164,12 @@ describe("connected apps that need reconnecting", () => {
     expect(await f.call()).toMatchObject({
       status: "pending",
       message:
-        "Connection card shown. The saved connection gives this app no tools, so the user must reconnect it. Wait for them to do so.",
+        "Connection card shown. The saved connection gives this app no tools, so the person must reconnect it. Wait for them to do so.",
     });
     expect(await f.call("Gmail", "another-effect")).toMatchObject({
       status: "pending",
       message:
-        "Connection card already shown. The saved connection gives this app no tools, so the user must reconnect it. Wait for them to do so.",
+        "Connection card already shown. The saved connection gives this app no tools, so the person must reconnect it. Wait for them to do so.",
     });
     expect(stored).toHaveLength(1);
     expect(stored[0]?.blocks[0]).toMatchObject({ status: "pending" });

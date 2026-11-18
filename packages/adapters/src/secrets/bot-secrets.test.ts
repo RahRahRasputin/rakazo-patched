@@ -1704,7 +1704,7 @@ describe("a one-time code request", () => {
         resolveRequestSecretDestination({ oneTimeCode: oneTimeCodeArgument({ origin }) }),
       ).toEqual({
         error:
-          "Codes can only be typed on HTTPS pages, and this page isn't HTTPS. Ask the user to take over and tell them that is why.",
+          "Codes can only be typed on HTTPS pages, and this page isn't HTTPS. Ask the person to take over and tell them that is why.",
       });
     }
   });
@@ -1830,7 +1830,7 @@ describe("resolveCodeFill", () => {
     expect(rows).toMatchObject([{ kind: "run-code-spent:run-1" }]);
     expect(await resolveCodeFill(input)).toEqual({
       error:
-        "No code is waiting. Use request_secret with oneTimeCode to ask the user for it first.",
+        "No code is waiting. Use request_secret with oneTimeCode to ask the person for it first.",
     });
   });
 
@@ -1871,7 +1871,7 @@ describe("resolveCodeFill", () => {
     const { prisma, rows } = await codeFixture("http://login.example.test");
     expect(
       await resolveCodeFill({ prisma, secretStore, scope: codeScope, runId: "run-1" }),
-    ).toEqual({ error: expect.stringContaining("Ask the user to take over and tell them") });
+    ).toEqual({ error: expect.stringContaining("Ask the person to take over and tell them") });
     expect(rows).toMatchObject([{ kind: "run-code:run-1" }]);
   });
 

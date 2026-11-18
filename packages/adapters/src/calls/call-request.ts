@@ -45,7 +45,7 @@ export async function callRequestRefusal(
     select: { id: true },
   });
   if (!voice) {
-    return "The user has not connected a voice provider, so they cannot take a call. Send a message instead.";
+    return "The person has not connected a voice provider, so they cannot take a call. Send a message instead.";
   }
   const minutes = input.phoneCallCooldownMinutes ?? phoneCallSettings().phoneCallCooldownMinutes;
   const since = new Date((input.now ?? Date.now()) - minutes * 60_000);
@@ -59,7 +59,7 @@ export async function callRequestRefusal(
     select: { id: true },
   });
   if (recent) {
-    return `You already called the user in the last ${minutes} ${minutes === 1 ? "minute" : "minutes"}. Send a message instead of calling again.`;
+    return `You already called the person in the last ${minutes} ${minutes === 1 ? "minute" : "minutes"}. Send a message instead of calling again.`;
   }
   return null;
 }
@@ -277,7 +277,7 @@ export async function requestUserCall(
       from: ["ringing"],
       status: "missed",
     });
-    return { error: "Could not ring the user. Send a message instead." };
+    return { error: "Could not ring the person. Send a message instead." };
   }
   await deps.events.notifyIncomingCalls?.(run.userId).catch(() => undefined);
   // Delivery to every device (and its APNs timeout) must not hold the bot's turn.
@@ -443,7 +443,7 @@ export async function endCallFromTool(
   }
   return {
     ok: callEndRun
-      ? "The call is already closed and now carries your title. The user is reading, not listening: finish any remaining work as a normal chat reply with full formatting."
-      : "Call ended and your farewell was spoken. The user is now reading, not listening: finish any remaining work as a normal chat reply with full formatting.",
+      ? "The call is already closed and now carries your title. The person is reading, not listening: finish any remaining work as a normal chat reply with full formatting."
+      : "Call ended and your farewell was spoken. The person is now reading, not listening: finish any remaining work as a normal chat reply with full formatting.",
   };
 }

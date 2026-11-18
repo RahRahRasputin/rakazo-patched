@@ -13,7 +13,7 @@ export function unavailableTool(
   const brief = reason.length > 400 ? `${reason.slice(0, 400)}...` : reason;
   return {
     name: `mcp__${server.slug}__unavailable`,
-    description: `The MCP server "${server.name}" is assigned to you but is unavailable right now, so none of its tools can be used. Reason: ${brief}. Tell the user it failed to start rather than saying it is not assigned. Calling this tool returns the same error.`,
+    description: `The MCP server "${server.name}" is assigned to you but is unavailable right now, so none of its tools can be used. Reason: ${brief}. Tell the person it failed to start rather than saying it is not assigned. Calling this tool returns the same error.`,
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     readOnly: true,
     route: {

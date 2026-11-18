@@ -1701,7 +1701,7 @@ export interface AutoReviewRequest {
   matchingRules: AutoReviewMatchingRule[];
   /**
    * A web_fetch to a site the run was not given. `args` is then only the full URL, and
-   * `userTask` only the owner's own words (their message or the routine's instructions), never
+   * `userTask` only the person's own words (their message or the routine's instructions), never
    * tool results or inbound messages, so injected text cannot argue for the site.
    */
   newSite?: boolean;
@@ -1712,7 +1712,7 @@ export interface AutoReviewRequest {
    */
   savedContextWrite?: boolean;
   /**
-   * The owner's own earlier messages in this chat, oldest first, before `userTask`: never a tool
+   * The person's own earlier messages in this chat, oldest first, before `userTask`: never a tool
    * result or anyone else's message. Redacted and capped by the caller.
    */
   ownerMessages?: string[];

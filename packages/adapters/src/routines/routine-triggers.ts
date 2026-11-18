@@ -174,7 +174,7 @@ export async function resolveRoutineEvents(
       select: { provider: true },
     });
     if (!identity) {
-      return { error: "This bot is not connected to a chat app. The user connects one first." };
+      return { error: "This bot is not connected to a chat app. The person connects one first." };
     }
     const provider = messagingProviderNamed(on.chat, [identity.provider]);
     if (!provider) {

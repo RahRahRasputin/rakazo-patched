@@ -151,7 +151,7 @@ export const APPROVAL_EXPIRED_RESULT = {
 
 /** What request_secret returns to the bot once the user dismissed its card. */
 const DISMISSED_SECRET_RESULT = { ok: false, dismissed: true } as const;
-const DISMISSED_SECRET_PROMPT = "The user dismissed this request.";
+const DISMISSED_SECRET_PROMPT = "The person dismissed this request.";
 
 export interface RunSecretWriter {
   withPrepared?<T>(

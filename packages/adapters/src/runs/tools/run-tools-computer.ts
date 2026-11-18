@@ -208,7 +208,7 @@ async function countPayment(ctx: RunContext, call: ToolCall): Promise<string | u
     getLogger().warn("spending limit could not be checked", {
       errorName: error instanceof Error ? error.name : typeof error,
     });
-    return "The user's spending limit couldn't be checked, so nothing was paid. Try again.";
+    return "The person's spending limit couldn't be checked, so nothing was paid. Try again.";
   }
 }
 
@@ -322,7 +322,7 @@ export async function pageBrowserTool(ctx: RunContext, call: ToolCall) {
                 // Only the card and checkout the person approved for this call.
                 const approvedCard = vaultCardUseOf(args.cardApproval);
                 if (approvedCard?.card !== step.card || approvedCard.site !== step.site)
-                  return { error: "The user has not approved typing this card here." };
+                  return { error: "The person has not approved typing this card here." };
                 const resolved = await resolveVaultCardFill({
                   prisma: deps.prisma,
                   secretStore: deps.secretStore,

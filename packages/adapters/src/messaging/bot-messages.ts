@@ -125,7 +125,7 @@ export async function messageBot(
     return {
       ok: false as const,
       error:
-        "bot-to-bot message limit reached for this chain; report back to the user instead of messaging another bot",
+        "bot-to-bot message limit reached for this chain; report back to the person instead of messaging another bot",
     };
   }
 

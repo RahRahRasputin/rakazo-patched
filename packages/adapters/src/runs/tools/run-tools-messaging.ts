@@ -312,7 +312,7 @@ export const messagingTools: ToolHandlers = {
         ? {
             ok: true,
             truncated: true,
-            note: `This progress update was cut off at ${maxLength} characters and the user only saw the truncated version above — it did NOT deliver your full content. message_user is for short interim beats only, never the final answer. Put your complete answer in your normal final reply instead of relying on this truncated update.`,
+            note: `This progress update was cut off at ${maxLength} characters and the person only saw the truncated version above — it did NOT deliver your full content. message_user is for short interim beats only, never the final answer. Put your complete answer in your normal final reply instead of relying on this truncated update.`,
           }
         : { ok: true },
     );

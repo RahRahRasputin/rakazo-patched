@@ -515,9 +515,9 @@ export async function findCommandVariableConflict(
   return name && (await hiddenFromBot(client, scope, name)) ? "another saved item" : name;
 }
 
-/** The bot must tell the user why it falls back to a takeover, so the refusal says so. */
+/** The bot must tell the person why it falls back to a takeover, so the refusal says so. */
 const NOT_HTTPS_CODE =
-  "Codes can only be typed on HTTPS pages, and this page isn't HTTPS. Ask the user to take over and tell them that is why.";
+  "Codes can only be typed on HTTPS pages, and this page isn't HTTPS. Ask the person to take over and tell them that is why.";
 
 export type RequestSecretDestinationResult = {
   /** Metadata only. The protected value is never part of this result. */
@@ -2233,11 +2233,11 @@ export async function resolveLoginFill(input: {
       approval.site !== origin ||
       !approval.fields.includes(input.code ? LOGIN_CODE_FIELD : input.field.trim())
     )
-      return { error: "The user has not approved signing in with this login here." };
+      return { error: "The person has not approved signing in with this login here." };
     if (approval.savedAt !== row.updatedAt.toISOString())
       return {
         error:
-          "This login changed after the user approved it, so nothing was typed. Call browser_act again to ask them.",
+          "This login changed after the person approved it, so nothing was typed. Call browser_act again to ask them.",
       };
   }
   const { fields, otp } =
@@ -2298,7 +2298,7 @@ export async function loadRunCodeRedactions(
 }
 
 const NO_CODE_WAITING =
-  "No code is waiting. Use request_secret with oneTimeCode to ask the user for it first.";
+  "No code is waiting. Use request_secret with oneTimeCode to ask the person for it first.";
 
 /**
  * This run's code for a page fill. Like a login's, the caller must pass `origin` to the page
@@ -2356,7 +2356,7 @@ export async function resolveCodeFill(input: {
 export const LOGIN_CODE_CHANGED =
   "The authenticator moved on to its next code before this one could be typed, so nothing was typed. Call browser_act again.";
 export const LOGIN_REMOVED =
-  "This login is no longer saved, so nothing was typed. Use request_secret with oneTimeCode to ask the user for the code.";
+  "This login is no longer saved, so nothing was typed. Use request_secret with oneTimeCode to ask the person for the code.";
 export const LOGIN_VALUE_CHANGED =
   "This login changed before its code could be typed, so nothing was typed. Call browser_act again.";
 export const CODE_ALREADY_TYPED =
@@ -2373,7 +2373,7 @@ export const LOGIN_CODE_TRIES = 3;
  * working one used several times by its codes coming in quick succession.
  */
 export const LOGIN_CODE_REPEAT_WINDOW_MS = 5 * 60_000;
-export const LOGIN_CODES_USED_UP = `A site asked for this login's authenticator code ${LOGIN_CODE_TRIES} times in a row, so its saved key may be wrong, and none are typed until the user saves the login again. Use request_secret with oneTimeCode to ask the user for the code.`;
+export const LOGIN_CODES_USED_UP = `A site asked for this login's authenticator code ${LOGIN_CODE_TRIES} times in a row, so its saved key may be wrong, and none are typed until the person saves the login again. Use request_secret with oneTimeCode to ask the person for the code.`;
 
 /**
  * Typing a saved login's authenticator code once in this run. The state, all of it under the
@@ -2569,7 +2569,7 @@ export async function resolveVaultCardFill(input: {
   if (row.updatedAt.toISOString() !== input.savedAt) {
     return {
       error:
-        "This card changed after the user approved it, so nothing was typed. Call browser_act again to ask them.",
+        "This card changed after the person approved it, so nothing was typed. Call browser_act again to ask them.",
     };
   }
   const card = decodeCardSecret(await openVaultValue(input.prisma, input.secretStore, row));
@@ -2602,6 +2602,6 @@ export async function resolveVaultCardFill(input: {
     ? { text: postalCode, ...fill }
     : {
         error:
-          "This card has no billing postal code saved. Type the postal code of the user's billing address yourself.",
+          "This card has no billing postal code saved. Type the postal code of the person's billing address yourself.",
       };
 }

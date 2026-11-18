@@ -18,9 +18,9 @@ describe("formatCurrentTimeInstruction", () => {
     // 09:15 UTC is 22:15 the same day in Auckland during daylight time (UTC+13).
     const line = formatCurrentTimeInstruction(new Date("2026-10-17T09:15:30Z"), "Pacific/Auckland");
     expect(line).toContain(
-      "Current date and time for the user: Saturday, 2026-10-17 22:15 (UTC+13:00) (Pacific/Auckland). That is 2026-10-17T09:15:30Z (UTC).",
+      "Current date and time for the person: Saturday, 2026-10-17 22:15 (UTC+13:00) (Pacific/Auckland). That is 2026-10-17T09:15:30Z (UTC).",
     );
-    expect(line).toContain("Use the user's time zone for times you mention");
+    expect(line).toContain("Use the person's time zone for times you mention");
   });
 
   it("uses the local calendar date when it differs from UTC", () => {

@@ -1,5 +1,5 @@
 export function ticketWakePrompt(ticket: string): string {
-  return `Work on ticket ${ticket}. Read it with ticket_get. Keep progress in ticket comments and update its status with ticket_update. Use ask or approval cards when user input is needed.`;
+  return `Work on ticket ${ticket}. Read it with ticket_get. Keep progress in ticket comments and update its status with ticket_update. Use ask or approval cards when the person's input is needed.`;
 }
 
 export function purchaseWakePrompt(purchaseId: string, status: string): string {
@@ -9,7 +9,7 @@ export function purchaseWakePrompt(purchaseId: string, status: string): string {
 export function mediaVideoWakePrompt(jobId: string, completed: boolean): string {
   return completed
     ? `Video job ${jobId} finished and is attached to the chat.`
-    : `Video job ${jobId} failed. Do not resubmit unless the user asks.`;
+    : `Video job ${jobId} failed. Do not resubmit unless the person asks.`;
 }
 
 export function cloudAgentWakePrompt(agentId: string, status: string): string {

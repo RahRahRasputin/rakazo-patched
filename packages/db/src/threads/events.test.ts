@@ -3600,7 +3600,7 @@ describe("answerRunInput approvals", () => {
       });
       expect(h.tx.task.updateMany).toHaveBeenCalledWith({
         where: { runs: { some: { id: "run-1" } } },
-        data: { prompt: "The user dismissed this request." },
+        data: { prompt: "The person dismissed this request." },
       });
       expect(h.tx.message.update).toHaveBeenCalledWith({
         where: { id: "message-1" },
@@ -3615,7 +3615,7 @@ describe("answerRunInput approvals", () => {
         where: { runs: { some: { id: "run-1" } } },
         data: {
           prompt:
-            "Sign in to the example site\n\nExample sign-in\nAnswer: The user dismissed this request.",
+            "Sign in to the example site\n\nExample sign-in\nAnswer: The person dismissed this request.",
         },
       });
     });

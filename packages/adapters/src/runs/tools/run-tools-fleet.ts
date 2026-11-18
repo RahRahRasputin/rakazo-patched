@@ -278,7 +278,7 @@ export const fleetTools: ToolHandlers = {
     // A held change (see prepareOwnBotUpdate) runs only once the owner or Auto Review approves it.
     if (typeof args.previousInstructions === "string") {
       if ((call.nextApprovedTool !== call.name && !call.bypassApproval) || !call.claimedEffect)
-        return call.finish({ error: "This instruction change needs the owner's approval." });
+        return call.finish({ error: "This instruction change needs the person's approval." });
       // A request stored before the baseline kept a fresh read as its expected text. Without
       // the marker it must not commit, whatever the resumed checkpoint restored.
       if (args.previousInstructionsFromBaseline !== true)

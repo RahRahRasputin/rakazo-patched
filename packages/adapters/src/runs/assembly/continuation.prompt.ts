@@ -1,9 +1,9 @@
 import { automated } from "../../messaging/automated-messages.prompt.js";
 
-// Sent in the user's role, so marked as automated: otherwise models read it as the user
+// Sent in the transcript role named user, so marked as automated: otherwise models read it as the person
 // telling them never to stop, and keep going instead of asking.
 export const SILENT_TOOL_CONTINUATION_PROMPT = automated(
-  "Your last turn ended right after a tool result, without a reply. Continue the original task from the latest tool result. If you need information or a decision from the user, ask them instead of guessing; otherwise use any remaining tools needed, then give the user the final answer.",
+  "Your last turn ended right after a tool result, without a reply. Continue the original task from the latest tool result. If you need information or a decision from the person, ask them instead of guessing; otherwise use any remaining tools needed, then give the person the final answer.",
 );
 // Sent after a reply was cut off by a dropped connection; the cut text is the previous turn.
 export const CUT_REPLY_CONTINUATION_PROMPT = automated(
@@ -25,5 +25,5 @@ export function cutReplyAtLimitPrompt(cut: string): string {
   );
 }
 export const SILENT_ALLOWED_TOOL_CONTINUATION_PROMPT = automated(
-  "Your last turn ended right after a tool result, without a reply. Continue the original task from the latest tool result. If you need information or a decision from the user, ask them instead of guessing, even if you were told to stay silent. Otherwise, if you were instructed to stay silent when there is nothing to report, follow that instruction for the entire final assistant reply; if not, use any remaining tools needed, then give the user the final answer.",
+  "Your last turn ended right after a tool result, without a reply. Continue the original task from the latest tool result. If you need information or a decision from the person, ask them instead of guessing, even if you were told to stay silent. Otherwise, if you were instructed to stay silent when there is nothing to report, follow that instruction for the entire final reply; if not, use any remaining tools needed, then give the person the final answer.",
 );

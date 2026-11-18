@@ -321,7 +321,7 @@ describe("prepareToolRequest: a saved login that asks first", () => {
     // waited: the replay carries no sign-in approval, so it is refused and asks again.
     const unasked = request({ actions }, { nextApprovedTool: "browser_act" });
     expect(await prepareToolRequest(ctx() as never, unasked)).toEqual({
-      error: expect.stringContaining("Call the tool again; that asks the user."),
+      error: expect.stringContaining("Call the tool again; that asks the person."),
     });
     expect(unasked.loginUse).toBeUndefined();
     expect(unasked.args).not.toHaveProperty("loginApproval");
@@ -500,7 +500,7 @@ describe("prepareToolRequest: a saved login that asks first", () => {
         actions: [password],
         meanwhile: ({ addKey }) => addKey(),
         card: "",
-        types: ["changed after the user approved it", notAllowed],
+        types: ["changed after the person approved it", notAllowed],
       },
       {
         name: "a sign-in allowed on one site, replayed with the page on another of its sites",

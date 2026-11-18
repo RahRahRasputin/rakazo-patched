@@ -40,7 +40,7 @@ function peerTurn(turn: Turn): ModelEmulatorStep[] {
       subject,
       {
         expect(request) {
-          expect(JSON.stringify(request.messages)).toContain("Paused until the user responds");
+          expect(JSON.stringify(request.messages)).toContain("Paused until the person responds");
         },
         response: { type: "text", text: "Assistant is waiting on approval." },
       },

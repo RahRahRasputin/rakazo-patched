@@ -7,9 +7,9 @@ import {
 import { takeoverResumeFromRelease } from "./takeover-resume.prompt.js";
 
 const HANDED_BACK_NOTE =
-  "The user finished on the computer. Take a fresh screenshot before acting on the screen. Do not request takeover again for this same step.";
+  "The person finished on the computer. Take a fresh screenshot before acting on the screen. Do not request takeover again for this same step.";
 const UNFINISHED_NOTE =
-  "The user skipped this step. Continue without assuming that step was done. Take a fresh screenshot before acting on the screen. Do not request takeover again for this same step unless you still cannot proceed.";
+  "The person skipped this step. Continue without assuming that step was done. Take a fresh screenshot before acting on the screen. Do not request takeover again for this same step unless you still cannot proceed.";
 
 describe("takeoverResumeFromRelease", () => {
   it("only rules out asking for the same step again, so a later code can still be asked for", () => {

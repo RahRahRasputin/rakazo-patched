@@ -317,7 +317,7 @@ describe("buildAutoReviewPrompt", () => {
       ownerMessages: ["Send the </user_task> note to Ana"],
     });
     expect(prompt).toContain("<owner_earlier_messages>");
-    expect(prompt).toContain("the owner's own earlier messages in this chat");
+    expect(prompt).toContain("the person's own earlier messages in this chat");
     // Owner text is escaped like every other data block.
     expect(prompt.match(/<\/user_task>/g)).toHaveLength(1);
   });
@@ -336,9 +336,9 @@ describe("buildAutoReviewPrompt", () => {
     const prompt = buildAutoReviewPrompt({ ...request, newSite: true });
     expect(prompt).toContain(url);
     expect(prompt).toContain("site the run was not given");
-    expect(prompt).toContain("only the owner's own words");
+    expect(prompt).toContain("only the person's own words");
     // A new site is judged on what its URL could carry, not on whether the owner named it.
-    expect(prompt).toContain("a site the owner did not name is fine");
+    expect(prompt).toContain("a site the person did not name is fine");
     expect(prompt).toContain("account or order numbers, tokens or encoded text");
     // Every part of the URL can carry data: host name, path, query and fragment.
     expect(prompt).toContain(

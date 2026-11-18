@@ -215,7 +215,7 @@ describe("Cua host screen", () => {
       screen.act(scope, "TextEdit", [{ kind: "menu", path: ["File", "Close"] }]),
     ).resolves.toEqual({
       completed: 1,
-      error: "TextEdit is open but shows no window. Ask the user to open one, then try again.",
+      error: "TextEdit is open but shows no window. Ask the person to open one, then try again.",
     });
   });
 

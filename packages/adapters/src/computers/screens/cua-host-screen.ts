@@ -165,7 +165,7 @@ export function createCuaHostScreen(options: CuaHostScreenOptions): HostScreen {
     throw new HostScreenError(
       near.length
         ? `No app is named exactly "${query}". Installed apps with similar names: ${near.join(", ")}.`
-        : `No app named "${query}" is installed. Ask the user for the app's exact name.`,
+        : `No app named "${query}" is installed. Ask the person for the app's exact name.`,
     );
   }
 
@@ -214,7 +214,7 @@ export function createCuaHostScreen(options: CuaHostScreenOptions): HostScreen {
       ((await launch(app, signal)) && (await windowWithin(pid, LAUNCH_WAIT_MS, signal)));
     if (!window)
       throw new HostScreenError(
-        `${app.name} is open but shows no window. Ask the user to open one, then try again.`,
+        `${app.name} is open but shows no window. Ask the person to open one, then try again.`,
       );
     return { name: app.name, pid, windowId: window.window_id, title: window.title };
   }

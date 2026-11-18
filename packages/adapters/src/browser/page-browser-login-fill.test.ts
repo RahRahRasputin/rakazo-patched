@@ -293,7 +293,7 @@ describe("live page helper one-time code fill", () => {
   ])("refuses %s, which does not look like a code box", (boxes, label) => {
     const { domWindow, fill } = fillCode(boxes, label);
     expect(fill).toThrow(
-      "Refused: This field doesn't look like a code box; ask the user to take over.",
+      "Refused: This field doesn't look like a code box; ask the person to take over.",
     );
     expect(domWindow.document.querySelector("input")!.value).toBe("");
   });

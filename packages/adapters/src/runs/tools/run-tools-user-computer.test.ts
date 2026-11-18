@@ -117,8 +117,8 @@ describe("userComputerCwd", () => {
     expect(userComputerCwd(environment, "code")).toBe("/Users/fake/code");
     expect(userComputerCwd(environment, "/Users/fake/code")).toBe("/Users/fake/code");
     expect(userComputerCwd(environment, "..cache")).toBe("/Users/fake/..cache");
-    expect(() => userComputerCwd(environment, "/tmp")).toThrow("inside the user's home folder");
-    expect(() => userComputerCwd(environment, "../other")).toThrow("inside the user's home folder");
+    expect(() => userComputerCwd(environment, "/tmp")).toThrow("inside the person's home folder");
+    expect(() => userComputerCwd(environment, "../other")).toThrow("inside the person's home folder");
     expect(
       userComputerCwd({ platform: "win32", home: "C:\\Users\\fake", shell: "pwsh" }, "code"),
     ).toBe("C:\\Users\\fake\\code");
@@ -187,7 +187,7 @@ describe("userComputerShell", () => {
       throw new Error("Device disconnected");
     });
     expect(await userComputerShell(ctx, call({ command: "ls" }))).toEqual({
-      error: "The user's computer did not finish the command: Device disconnected",
+      error: "The person's computer did not finish the command: Device disconnected",
     });
   });
 

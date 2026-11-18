@@ -1,9 +1,9 @@
 import type { MessageBlock } from "@rakazo/contracts";
 
-/** Instruction-stack note for bots whose owner has a messaging identity. */
+/** Instruction-stack note for bots whose person has a messaging identity. */
 export function messagingDmSurfaceNote(): string {
   return [
-    "Chat surface: the owner also reaches you over a messaging app (iMessage/SMS, Slack, WhatsApp, or similar).",
+    "Chat surface: the person also reaches you over a messaging app (iMessage/SMS, Slack, WhatsApp, or similar).",
     "That conversation and this one are the same thread; anything you reply here is mirrored to their chat.",
     "Keep replies concise. They arrive as chat messages.",
   ].join(" ");
@@ -28,17 +28,17 @@ export function chatAppConnectNote(
 export function messagingChannelPrivacyBlock(): string {
   return [
     "You are posting to a group chat with multiple people through the deployment's shared messaging line.",
-    "Never reveal or share the owner's personal information, memory contents, scratchpad, or 1:1 conversation contents in the group.",
-    'Your posts are publicly attributed to the owner ("<name>\'s agent: …").',
+    "Never reveal or share the person's personal information, memory contents, scratchpad, or 1:1 conversation contents in the group.",
+    'Your posts are publicly attributed to the person ("<name>\'s agent: …").',
     "Reply only when you add value to the group; otherwise finish silently without posting.",
   ].join("\n");
 }
 
-/** Privacy rules for a shared chat when the message is from someone other than the owner. */
+/** Privacy rules for a shared chat when the message is from someone other than the person. */
 export function nonOwnerChatPrivacyBlock(): string {
   return [
-    "This message is from someone other than your owner, in a shared chat.",
-    "Never reveal or share the owner's personal information, memory contents, scratchpad, or private conversations.",
+    "This message is from someone other than your person, in a shared chat.",
+    "Never reveal or share the person's personal information, memory contents, scratchpad, or private conversations.",
   ].join("\n");
 }
 
@@ -55,7 +55,7 @@ export function isMessagingChannelRun(
 }
 
 /**
- * Group names and owner names are attacker-controlled text interpolated
+ * Group names and people's names are attacker-controlled text interpolated
  * into prompts and DMs; strip framing characters before they get near one.
  */
 export function sanitizeMessagingLabel(value: string): string {

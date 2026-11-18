@@ -585,7 +585,7 @@ function collectCommands(
         name,
         description: description.slice(0, 2000),
         body: body.includes("$ARGUMENTS")
-          ? `$ARGUMENTS is whatever the user wrote after /${name}.\n\n${body}`
+          ? `$ARGUMENTS is whatever the person wrote after /${name}.\n\n${body}`
           : body,
       });
     } catch (error) {

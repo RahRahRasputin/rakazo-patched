@@ -817,7 +817,7 @@ describe("Pi connector tool dispatch", () => {
         botId: "b",
         threadId: "t",
         runId: "continuation",
-        prompt: "Respond to the user's steering context.",
+        prompt: "Respond to the person's steering context.",
         instructions: "Follow the user's instructions.",
         history: [
           {

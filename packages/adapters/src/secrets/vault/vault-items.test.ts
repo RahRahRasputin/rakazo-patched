@@ -320,7 +320,7 @@ describe("filling a saved card", () => {
         site: "https://shop.example.test",
         savedAt: approved,
       }),
-    ).toEqual({ error: expect.stringContaining("changed after the user approved") });
+    ).toEqual({ error: expect.stringContaining("changed after the person approved") });
   });
 });
 
@@ -1427,7 +1427,7 @@ describe("a login that asks first, on its other sites and with its code", () => 
         approval: given,
         ...(code && { code }),
       });
-    const refused = { error: "The user has not approved signing in with this login here." };
+    const refused = { error: "The person has not approved signing in with this login here." };
     // Approved on its own site: it is sent for that site only, so the page browser refuses the
     // page on its other one.
     expect(await fill("Password", approval({ site }))).toMatchObject({ origin: site });
@@ -1485,7 +1485,7 @@ describe("a login that asks first, on its other sites and with its code", () => 
         approval,
         ...(code && { code: true as const }),
       });
-    const refused = { error: "The user has not approved signing in with this login here." };
+    const refused = { error: "The person has not approved signing in with this login here." };
     expect(await fill(approvedFor("fill_secret"), false)).toMatchObject({
       text: "fake-backup-code",
     });

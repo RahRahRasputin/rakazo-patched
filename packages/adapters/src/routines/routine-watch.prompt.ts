@@ -1,4 +1,4 @@
-/** Starts the note a change trigger appends to a routine's prompt; what follows is not the owner's. */
+/** Starts the note a change trigger appends to a routine's prompt; what follows is not the person's. */
 export const ROUTINE_WATCH_NOTE_START =
   "\n\nThis run was started because something you watch changed (";
 

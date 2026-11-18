@@ -7,7 +7,7 @@ it("stands in for a server whose tools could not be listed, with the reason", ()
   expect(unavailableTool(server, "auth failed")).toEqual({
     name: "mcp__mail__unavailable",
     description:
-      'The MCP server "Mail" is assigned to you but is unavailable right now, so none of its tools can be used. Reason: auth failed. Tell the user it failed to start rather than saying it is not assigned. Calling this tool returns the same error.',
+      'The MCP server "Mail" is assigned to you but is unavailable right now, so none of its tools can be used. Reason: auth failed. Tell the person it failed to start rather than saying it is not assigned. Calling this tool returns the same error.',
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     readOnly: true,
     route: {
@@ -22,6 +22,6 @@ it("stands in for a server whose tools could not be listed, with the reason", ()
 
 it("cuts a long reason", () => {
   expect(unavailableTool(server, "x".repeat(401)).description).toContain(
-    `Reason: ${"x".repeat(400)}.... Tell the user`,
+    `Reason: ${"x".repeat(400)}.... Tell the person`,
   );
 });

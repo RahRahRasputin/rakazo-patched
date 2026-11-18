@@ -263,15 +263,15 @@ describe("playbook defaults", () => {
   it("fills the exact default fields", () => {
     expect(buildPlaybookFromRecording("", [])).toMatchInlineSnapshot(`
       {
-        "approvalBoundaries": "Do not send messages, spend money, publish content, or delete data without explicit user approval.",
-        "failureHandling": "If a step fails or the expected screen is not visible, stop and ask the user before retrying.",
-        "howToCheck": "Confirm the outcome matches the user's goal before reporting success.",
+        "approvalBoundaries": "Do not send messages, spend money, publish content, or delete data without the person's explicit approval.",
+        "failureHandling": "If a step fails or the expected screen is not visible, stop and ask the person before retrying.",
+        "howToCheck": "Confirm the outcome matches the person's goal before reporting success.",
         "inputs": [],
         "steps": [
           "Repeat the demonstrated workflow using the same navigation pattern.",
         ],
         "whatToReturn": "A short summary of what was completed and where outputs were saved.",
-        "whenToUse": "When the user asks to repeat the demonstrated task.",
+        "whenToUse": "When the person asks to repeat the demonstrated task.",
       }
     `);
     expect(

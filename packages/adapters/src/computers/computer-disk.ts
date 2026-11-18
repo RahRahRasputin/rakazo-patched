@@ -91,5 +91,5 @@ export function diskNoteInstruction(disk: StoredDisk): string | undefined {
   if (percent === null || percent < DISK_NOTE_PERCENT) return undefined;
   const free = Number(disk.diskFreeBytes);
   const size = free >= 1e9 ? `${Math.round(free / 1e9)} GB` : `${Math.round(free / 1e6)} MB`;
-  return `The computer's disk is ${percent}% full (${size} free). Free space by removing build output and caches you no longer need, or tell the user.`;
+  return `The computer's disk is ${percent}% full (${size} free). Free space by removing build output and caches you no longer need, or tell the person.`;
 }

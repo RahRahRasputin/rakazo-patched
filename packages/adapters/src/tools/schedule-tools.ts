@@ -969,7 +969,7 @@ function carriedRunAtForTimezone(
 
 /** Steers away from cancel and recreate: a new command watch asks the user again. */
 const WATCH_RETIME_ERROR =
-  "This routine is a watch: it checks every watch.everyMinutes minutes and has no schedule, so schedule_update can only change its name, prompt or active. The user can change how often it checks in the routine's settings on the web. Do not cancel and recreate it for this.";
+  "This routine is a watch: it checks every watch.everyMinutes minutes and has no schedule, so schedule_update can only change its name, prompt or active. The person can change how often it checks in the routine's settings on the web. Do not cancel and recreate it for this.";
 
 /**
  * Edit one of this bot's routines in place: name, prompt, whether it runs in its chat, timing

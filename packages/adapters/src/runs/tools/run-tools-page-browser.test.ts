@@ -583,7 +583,7 @@ describe("browser_act types a saved card only where the user approved it", () =>
     );
     expect(
       (await fillSavedCard({ ...approved, savedAt: "2026-01-01T00:00:00.000Z" })).seen,
-    ).toContain("changed after the user approved");
+    ).toContain("changed after the person approved");
     // Nothing was typed, so a batch refused at a later step records no use.
     const refused = await fillSavedCard(approved, ["number", "postal_code"]);
     expect(refused.seen).toContain("no billing postal code");
@@ -717,7 +717,7 @@ describe("browser_act signs in with a login that asks first only as the user app
     const waited = approval();
     await relabelVaultItem(db.prisma, scope, "work", { title: "Work" });
     expect(await act(["Password"], waited)).toContain(
-      "This login changed after the user approved it, so nothing was typed. Call browser_act again to ask them.",
+      "This login changed after the person approved it, so nothing was typed. Call browser_act again to ask them.",
     );
     // Blocked, or limited to another bot, while it waited: it is as if never saved.
     await relabelVaultItem(db.prisma, scope, "work", { bots: { allBots: false, botIds: [] } });

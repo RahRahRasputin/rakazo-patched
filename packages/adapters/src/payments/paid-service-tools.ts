@@ -181,7 +181,7 @@ export async function serviceCallFromTool(
     context.signal.throwIfAborted();
     return {
       error:
-        "The call did not finish, and it may still be charged. Don't retry it automatically; tell the user.",
+        "The call did not finish, and it may still be charged. Don't retry it automatically; tell the person.",
     };
   }
 

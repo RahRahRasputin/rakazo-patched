@@ -325,7 +325,7 @@ describe("daily check-in dispatch restriction", () => {
       run: { trigger: "routine", clientNonce: "strategic-initiative:bot-1:1" },
     };
     expect(await applyTool(ctx as never, name, {}, "call-1")).toEqual({
-      error: "Daily check-ins can only ask or message the user.",
+      error: "Daily check-ins can only ask or message the person.",
     });
     expect(audited).toEqual([]);
     // Kept for the log line of a loop this refusal goes on to cause.

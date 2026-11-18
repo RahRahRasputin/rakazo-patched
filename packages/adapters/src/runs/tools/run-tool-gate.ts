@@ -388,8 +388,8 @@ export async function gateToolCall(
       result: refusal(
         "approval_denied",
         approvalResolved.decision === "deny"
-          ? `${name} is blocked in this space${blockingRuleSuffix(approvalResolved)}. Don't try it another way; tell the user it's blocked.`
-          : `${name} needs the owner's approval because it could have been asked for by someone else, and this space never asks. Don't retry; tell the user.`,
+          ? `${name} is blocked in this space${blockingRuleSuffix(approvalResolved)}. Don't try it another way; tell the person it's blocked.`
+          : `${name} needs the person's approval because it could have been asked for by someone else, and this space never asks. Don't retry; tell the person.`,
       ),
     };
   }

@@ -437,11 +437,11 @@ export async function markReadOutsideContent(ctx: RunContext) {
 
 /** A change landed after this attempt's snapshot; only a fresh run can apply the rewrite. */
 export const OWN_INSTRUCTIONS_CHANGED_ERROR =
-  "Instructions changed since this run started, so your instructions were not saved. Ask the user to send their request again so a new run starts from the current instructions.";
+  "Instructions changed since this run started, so your instructions were not saved. Ask the person to send their request again so a new run starts from the current instructions.";
 
 /** An older checkpoint predates the baseline; a resumed attempt must not guess. */
 export const OWN_INSTRUCTIONS_BASELINE_UNKNOWN_ERROR =
-  "This resumed run cannot safely change its own instructions. Ask the user to send their request again so a new run starts from the current instructions.";
+  "This resumed run cannot safely change its own instructions. Ask the person to send their request again so a new run starts from the current instructions.";
 
 export function nextMutatingEffectOccurrence(
   ctx: RunContext,

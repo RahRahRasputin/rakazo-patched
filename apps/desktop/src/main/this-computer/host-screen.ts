@@ -14,11 +14,11 @@ import type { HostScreen } from "@rakazo/adapters/host-screen";
 import { HostScreenError } from "@rakazo/adapters/host-screen";
 
 export const SCREEN_LOCKED_MESSAGE =
-  "The user's screen is locked, so their apps can't be seen or used. Ask them to unlock it, then try again.";
+  "The person's screen is locked, so their apps can't be seen or used. Ask them to unlock it, then try again.";
 export const SCREEN_DRIVER_DOWNLOAD_MESSAGE =
-  "Screen control couldn't be set up on this computer. Ask the user to check their internet connection, then try again.";
+  "Screen control couldn't be set up on this computer. Ask the person to check their internet connection, then try again.";
 export const SCREEN_PERMISSION_MESSAGE =
-  "Rakazo needs Accessibility and Screen Recording access on this Mac. Ask the user to allow Rakazo in System Settings > Privacy & Security, quit and reopen Rakazo, then try again.";
+  "Rakazo needs Accessibility and Screen Recording access on this Mac. Ask the person to allow Rakazo in System Settings > Privacy & Security, quit and reopen Rakazo, then try again.";
 
 /** The parts of Electron's macOS permission API this uses. */
 export interface ScreenPermissionApi {

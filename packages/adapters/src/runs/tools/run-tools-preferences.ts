@@ -12,7 +12,7 @@ const PreferencesPatchSchema = z
 async function updatePreferences(ctx: RunContext, call: ToolCall) {
   const { deps, run, source } = ctx;
   if (!source.ownerStartedRun)
-    return call.finish({ error: "Account preferences change only in a chat the user started." });
+    return call.finish({ error: "Account preferences change only in a chat the person started." });
   const parsed = PreferencesPatchSchema.safeParse(call.args);
   if (!parsed.success)
     return call.finish({

@@ -181,7 +181,7 @@ describe("request_purchase with a spending limit", () => {
     const over = await env.call("request_purchase", { ...request, amount: 3002 }, "op-2");
     expect(over).toEqual({
       error:
-        "This would go over the user's spending limit of $50.00 a week ($19.99 spent), so nothing was paid. Don't retry; tell the user.",
+        "This would go over the person's spending limit of $50.00 a week ($19.99 spent), so nothing was paid. Don't retry; tell the person.",
     });
     expect(env.wallet.created).toHaveLength(1);
   });

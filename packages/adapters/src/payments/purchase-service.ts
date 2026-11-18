@@ -48,17 +48,17 @@ export const PURCHASE_POLL_MS = 5_000;
 
 export const NOT_CONFIGURED = { error: "No wallet is available." };
 const DISCONNECTED = {
-  error: "The user's wallet is not connected. Ask them to connect it in Settings, then try again.",
+  error: "The person's wallet is not connected. Ask them to connect it in Settings, then try again.",
 };
 const NOT_APPROVED = { error: "The purchase is not approved. Check purchase_status." };
 
 const NEXT: Record<string, string> = {
   pending_approval:
-    "Tell the user to approve it in their wallet, then end your turn. You are woken when they decide.",
+    "Tell the person to approve it in their wallet, then end your turn. You are woken when they decide.",
   needs_action:
-    "The user must finish a step in their wallet at approvalUrl. You are woken when it changes.",
-  denied: "The user declined. Do not retry unless they ask.",
-  expired: "The approval request expired. Ask the user before requesting again.",
+    "The person must finish a step in their wallet at approvalUrl. You are woken when it changes.",
+  denied: "The person declined. Do not retry unless they ask.",
+  expired: "The approval request expired. Ask the person before requesting again.",
   canceled: "The purchase was canceled.",
   failed: "The purchase failed.",
   completed: "The purchase is complete.",
@@ -216,7 +216,7 @@ async function requestPurchase(
     ? { kind: "pay_token", merchantAccountId }
     : { kind: "card", merchantName: request.merchantName, merchantUrl: request.merchantUrl };
   if (!walletSupports(provider, credential.kind))
-    return { error: "The user's wallet can't pay with a pay token. Use the card instead." };
+    return { error: "The person's wallet can't pay with a pay token. Use the card instead." };
   return createPurchase(deps, provider, context, run, {
     credential,
     amount: request.amount,

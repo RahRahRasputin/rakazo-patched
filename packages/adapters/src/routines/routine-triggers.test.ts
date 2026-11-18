@@ -99,7 +99,7 @@ describe("resolveRoutineEvents", () => {
         ...none,
         chat: "Slack",
       }),
-    ).toEqual({ error: "This bot is not connected to a chat app. The user connects one first." });
+    ).toEqual({ error: "This bot is not connected to a chat app. The person connects one first." });
   });
 
   it("needs a server that receives mail and a bot address for email", async () => {

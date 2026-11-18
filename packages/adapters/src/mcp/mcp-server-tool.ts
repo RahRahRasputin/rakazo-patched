@@ -237,7 +237,7 @@ export async function addMcpServerFromTool(
   } catch (error) {
     if (isUniqueViolation(error)) {
       return {
-        error: `An MCP server named "${parsed.name}" already exists. Ask the user to remove it first or pick another name.`,
+        error: `An MCP server named "${parsed.name}" already exists. Ask the person to remove it first or pick another name.`,
       };
     }
     throw error;
@@ -253,7 +253,7 @@ export async function addMcpServerFromTool(
     ok: true,
     server_id: serverRow.id,
     next_step: parsed.assignToSelf
-      ? `An approval card is in the chat. End your turn with one short sentence asking the user to ${oauthLikely ? "authorize" : "approve"} it there; the card already shows the server's details. You will be told when they connect it.`
+      ? `An approval card is in the chat. End your turn with one short sentence asking the person to ${oauthLikely ? "authorize" : "approve"} it there; the card already shows the server's details. You will be told when they connect it.`
       : "The server was registered without assigning it to this bot.",
   };
 }

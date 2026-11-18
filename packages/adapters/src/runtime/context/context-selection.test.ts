@@ -863,7 +863,7 @@ const tokenizedSamples = [
     text: JSON.stringify({
       name: "ask_user",
       description:
-        "Ask the user one short multiple-choice question with tappable options, then wait for their selection. Use this instead of asking them to type when two to four concise choices are enough.",
+        "Ask the person one short multiple-choice question with tappable options, then wait for their selection. Use this instead of asking them to type when two to four concise choices are enough.",
       parameters: {
         type: "object",
         properties: {

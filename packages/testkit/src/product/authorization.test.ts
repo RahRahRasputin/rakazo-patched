@@ -332,7 +332,7 @@ describeWithDatabase("API authorization and resource isolation", () => {
       ["bots/importCreate"],
       ["bots/importSetupState"],
       ["bots/templates"],
-      ["bots/createFromTemplate", { templateId: "morning-briefing", version: 1 }],
+      ["bots/createFromTemplate", { templateId: "morning-briefing", version: 2 }],
       ["bots/reorder"],
       ["bots/restoreInstructions"],
       ["bots/setComputer"],

@@ -40,7 +40,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "skill_read",
     description:
-      "Load a skill (a reusable how-to recipe) by exact name. Call this when a catalog skill matches the user's request, then follow it immediately. When the result lists files, read one by calling again with its path in file.",
+      "Load a skill (a reusable how-to recipe) by exact name. Call this when a catalog skill matches the person's request, then follow it immediately. When the result lists files, read one by calling again with its path in file.",
     inputSchema: {
       type: "object",
       properties: {
@@ -56,7 +56,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "skill_create",
     description:
-      "Create a skill: a reusable, generic how-to recipe. Use when a multi-step task is worth repeating or the user asks to save a skill. Do not include account names, channels, or inboxes — those belong in a routine.",
+      "Create a skill: a reusable, generic how-to recipe. Use when a multi-step task is worth repeating or the person asks to save a skill. Do not include account names, channels, or inboxes — those belong in a routine.",
     inputSchema: {
       type: "object",
       properties: {
@@ -80,7 +80,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "skill_update",
     description:
-      "Update a user-created skill by name or id. Builtin and plugin skills are read-only.",
+      "Update a skill the person created, by name or id. Builtin and plugin skills are read-only.",
     inputSchema: {
       type: "object",
       properties: {
@@ -96,7 +96,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "skill_delete",
     description:
-      "Delete a user-created skill by name or id. Builtin and plugin skills cannot be deleted.",
+      "Delete a skill the person created, by name or id. Builtin and plugin skills cannot be deleted.",
     inputSchema: {
       type: "object",
       properties: {
@@ -108,7 +108,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "run_subagent",
     description:
-      "Delegate a task to an independent subagent. Returns immediately; its result comes back later. You remain available to the user. Never call this because the user asked to create a bot — that is spawn_bot, and spawn_bot alone.",
+      "Delegate a task to an independent subagent. Returns immediately; its result comes back later. You remain available to the person. Never call this because the person asked to create a bot — that is spawn_bot, and spawn_bot alone.",
     inputSchema: {
       type: "object",
       properties: {
@@ -136,7 +136,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "create_space",
     description:
-      "Propose a new space in the current organization when the user asks for a separate data boundary. A space can contain many bots and groups, but its chats, files, memory, tools, and integrations stay isolated from other spaces. Creating the space is the whole action; do not create bots in it unless the user asks later.",
+      "Propose a new space in the current organization when the person asks for a separate data boundary. A space can contain many bots and groups, but its chats, files, memory, tools, and integrations stay isolated from other spaces. Creating the space is the whole action; do not create bots in it unless the person asks later.",
     inputSchema: {
       type: "object",
       properties: {
@@ -153,7 +153,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "spawn_bot",
     description:
-      "Create a full, regular bot — the same kind the user creates from the + button. It gets its own thread, computer, and memory, and appears as a peer in the bot list. Do not also call run_subagent. To give the new bot more than instructions (skills, routines, memories, apps to connect) or a task the user wants started, put it in prompt; the bot sets itself up from it. Otherwise creating the bot is the whole action.",
+      "Create a full, regular bot — the same kind the person creates from the + button. It gets its own thread, computer, and memory, and appears as a peer in the bot list. Do not also call run_subagent. To give the new bot more than instructions (skills, routines, memories, apps to connect) or a task the person wants started, put it in prompt; the bot sets itself up from it. Otherwise creating the bot is the whole action.",
     inputSchema: {
       type: "object",
       properties: {
@@ -188,7 +188,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "update_bot",
     description:
-      "Read or change your own settings. Call with no fields to read them and the models and thinking levels you can pick. Long instructions come in pages; follow instructionsNextOffset before replacing them. If a read comes back with contextTruncated, it was shortened: say so, do not rewrite. Pass fields to change them, only when the user asks; setting your name, description and first instructions when you have none is fine. Never claim a change without calling this.",
+      "Read or change your own settings. Call with no fields to read them and the models and thinking levels you can pick. Long instructions come in pages; follow instructionsNextOffset before replacing them. If a read comes back with contextTruncated, it was shortened: say so, do not rewrite. Pass fields to change them, only when the person asks; setting your name, description and first instructions when you have none is fine. Never claim a change without calling this.",
     inputSchema: {
       type: "object",
       properties: {
@@ -209,7 +209,7 @@ export const fleetTools: ConnectorTool[] = [
         artifact_id: {
           type: "string",
           description:
-            "Image artifact in this space to use as the profile picture. Prefer an image the user attached in this chat.",
+            "Image artifact in this space to use as the profile picture. Prefer an image the person attached in this chat.",
         },
         use_attached_image: {
           type: "boolean",
@@ -219,7 +219,7 @@ export const fleetTools: ConnectorTool[] = [
         dailyCheckIns: { type: "boolean" },
         notifyOnFinish: {
           type: "boolean",
-          description: "Notify the user when this bot finishes a run.",
+          description: "Notify the person when this bot finishes a run.",
         },
         instructions: {
           type: "string",
@@ -276,7 +276,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "create_group",
     description:
-      "Create a group of 2 to 10 of this user's bots. Pass bot_ids or bot_names (exact).",
+      "Create a group of 2 to 10 of this person's bots. Pass bot_ids or bot_names (exact).",
     inputSchema: {
       type: "object",
       properties: {
@@ -291,7 +291,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "update_group",
     description:
-      "Rename a group or add and remove its members. Works on any group of this user, not only ones you created. Identify it by group_id or group_name (exact). A group keeps 2 to 10 members.",
+      "Rename a group or add and remove its members. Works on any group of this person, not only ones you created. Identify it by group_id or group_name (exact). A group keeps 2 to 10 members.",
     inputSchema: {
       type: "object",
       properties: {
@@ -306,7 +306,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "organize_bot",
     description:
-      "Move a bot or group into a sidebar section, clear its section, or pin and unpin it. Works on any bot or group of this user, not only ones you created. Identify it by bot_id, bot_name, group_id or group_name (exact). section is a section name; clear_section: true takes it out of its section.",
+      "Move a bot or group into a sidebar section, clear its section, or pin and unpin it. Works on any bot or group of this person, not only ones you created. Identify it by bot_id, bot_name, group_id or group_name (exact). section is a section name; clear_section: true takes it out of its section.",
     inputSchema: {
       type: "object",
       properties: {
@@ -322,7 +322,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "set_child_instructions",
     description:
-      "Replace the instructions of a bot in this space. Identify it by bot_id or bot_name (exact). Pass expected_version from list_fleet with that bot_id. One instruction edit per bot per run. Needs the owner's approval.",
+      "Replace the instructions of a bot in this space. Identify it by bot_id or bot_name (exact). Pass expected_version from list_fleet with that bot_id. One instruction edit per bot per run. Needs the person's approval.",
     inputSchema: {
       type: "object",
       properties: {
@@ -340,7 +340,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "set_child_bot_model",
     description:
-      "Set the model of a bot in this space, or reset it to the default with clear: true. Identify it by bot_id or bot_name (exact). Needs the owner's approval.",
+      "Set the model of a bot in this space, or reset it to the default with clear: true. Identify it by bot_id or bot_name (exact). Needs the person's approval.",
     inputSchema: {
       type: "object",
       properties: {
@@ -365,7 +365,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "archive_bot",
     description:
-      "Archive another bot in this space. Archiving stops its work and routines, hides it from the active list, and preserves its conversation, memory, and files for the user to restore or delete later. confirm_name must exactly match its name. This cannot archive you.",
+      "Archive another bot in this space. Archiving stops its work and routines, hides it from the active list, and preserves its conversation, memory, and files for the person to restore or delete later. confirm_name must exactly match its name. This cannot archive you.",
     inputSchema: {
       type: "object",
       properties: {
@@ -382,7 +382,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "message_bot",
     description:
-      'Send an update, question or result to another of the user\'s bots. Only this tool delivers it: a message written in your reply, such as "[to Comms] …", never reaches them. Delivery is async, so keep working; send no acknowledgements or repeats.',
+      'Send an update, question or result to another of the person\'s bots. Only this tool delivers it: a message written in your reply, such as "[to Comms] …", never reaches them. Delivery is async, so keep working; send no acknowledgements or repeats.',
     inputSchema: {
       type: "object",
       properties: {
@@ -461,7 +461,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "update_preferences",
     description:
-      "Read or change the user's own account preferences: timezone and Rakazo marketing emails. Change them only when the user asks. Call with no fields to read the current values. Email, password, sign-in, billing and account deletion are only in the app's settings.",
+      "Read or change the person's own account preferences: timezone and Rakazo marketing emails. Change them only when the person asks. Call with no fields to read the current values. Email, password, sign-in, billing and account deletion are only in the app's settings.",
     inputSchema: {
       type: "object",
       properties: {
@@ -480,7 +480,7 @@ export const fleetTools: ConnectorTool[] = [
   {
     name: "feedback",
     description:
-      "Send a bug report or product feedback about Rakazo to the people who run this server. Only when the user asks you to report something. Describe what happened and what was expected in general terms; leave out names, contact details, message text, credentials and other personal details. The report already identifies this chat, bot and run.",
+      "Send a bug report or product feedback about Rakazo to the people who run this server. Only when the person asks you to report something. Describe what happened and what was expected in general terms; leave out names, contact details, message text, credentials and other personal details. The report already identifies this chat, bot and run.",
     inputSchema: {
       type: "object",
       properties: {
@@ -488,7 +488,7 @@ export const fleetTools: ConnectorTool[] = [
         description: {
           type: "string",
           maxLength: FEEDBACK_DESCRIPTION_MAX_LENGTH,
-          description: "What went wrong or what the user suggests, without personal details.",
+          description: "What went wrong or what the person suggests, without personal details.",
         },
       },
       required: ["kind", "description"],

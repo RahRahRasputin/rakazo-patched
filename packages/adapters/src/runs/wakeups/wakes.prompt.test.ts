@@ -10,7 +10,7 @@ import {
 describe("wake prompts", () => {
   it("renders each wake as the bot reads it", () => {
     expect(ticketWakePrompt("OPS-7")).toMatchInlineSnapshot(
-      `"Work on ticket OPS-7. Read it with ticket_get. Keep progress in ticket comments and update its status with ticket_update. Use ask or approval cards when user input is needed."`,
+      `"Work on ticket OPS-7. Read it with ticket_get. Keep progress in ticket comments and update its status with ticket_update. Use ask or approval cards when the person's input is needed."`,
     );
     expect(purchaseWakePrompt("purchase-1", "approved")).toMatchInlineSnapshot(
       `"Purchase purchase-1 is approved. Use purchase_status to continue."`,
@@ -19,7 +19,7 @@ describe("wake prompts", () => {
       `"Video job job-1 finished and is attached to the chat."`,
     );
     expect(mediaVideoWakePrompt("job-1", false)).toMatchInlineSnapshot(
-      `"Video job job-1 failed. Do not resubmit unless the user asks."`,
+      `"Video job job-1 failed. Do not resubmit unless the person asks."`,
     );
     expect(cloudAgentWakePrompt("agent-1", "completed")).toMatchInlineSnapshot(
       `"Cloud agent agent-1 is completed. Use cloud_agent_status to inspect its result."`,

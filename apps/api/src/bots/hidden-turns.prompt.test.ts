@@ -36,10 +36,10 @@ describe("hidden turn prompts", () => {
 
   it("renders the hang-up and connected-server turns", () => {
     expect(HANG_UP_PROMPT).toMatchInlineSnapshot(
-      `"The voice call just ended because the user hung up. First call end_call with a short title for the call (leave farewell empty). Then, if anything the user asked for during the call is still unfinished, complete it now as a normal chat reply with full formatting. If nothing is pending, reply with one short sentence."`,
+      `"The voice call just ended because the person hung up. First call end_call with a short title for the call (leave farewell empty). Then, if anything the person asked for during the call is still unfinished, complete it now as a normal chat reply with full formatting. If nothing is pending, reply with one short sentence."`,
     );
     expect(mcpConnectedPrompt('Docs "beta"')).toMatchInlineSnapshot(
-      `"The user just connected the MCP server "Docs \\"beta\\"" from its approval card, so its tools are available now. Carry on with what they asked for. If nothing is left to do, confirm in one short sentence."`,
+      `"The person just connected the MCP server "Docs \\"beta\\"" from its approval card, so its tools are available now. Carry on with what they asked for. If nothing is left to do, confirm in one short sentence."`,
     );
   });
 });

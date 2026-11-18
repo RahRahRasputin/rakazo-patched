@@ -96,7 +96,7 @@ function onlyInSpace(owner: SkillOwner) {
 }
 
 const SHARED_SKILL_ERROR =
-  "Could not change this skill. A skill available in other spaces can only be changed by the user.";
+  "Could not change this skill. A skill available in other spaces can only be changed by the person.";
 
 export async function listAgentSkillRecords(
   prisma: PrismaClient,
@@ -216,7 +216,7 @@ export async function skillCreateFromTool(
       id: row.id,
       name: row.name,
       description: row.description,
-      hint: `Created skill. Mention /${row.name} so the user can open it.`,
+      hint: `Created skill. Mention /${row.name} so the person can open it.`,
     };
   } catch {
     return { error: "Could not create skill (name may already exist)." };

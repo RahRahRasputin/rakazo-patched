@@ -726,7 +726,7 @@ export class ComposioConnector implements ComposioProvider {
         });
         yield {
           type: "error",
-          message: `The ${stale} connection is no longer active. Ask the user to reconnect ${stale}.`,
+          message: `The ${stale} connection is no longer active. Ask the person to reconnect ${stale}.`,
         };
         return;
       }

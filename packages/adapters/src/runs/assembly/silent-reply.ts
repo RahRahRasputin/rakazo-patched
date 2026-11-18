@@ -1,6 +1,6 @@
 import type { MessageBlock } from "@rakazo/contracts";
 
-/** Exact token a silent run must emit as its entire final assistant reply. */
+/** Exact token a silent run must emit as its entire final reply. */
 export const NO_RESPONSE = "NO_RESPONSE";
 
 function textBlocksOf(

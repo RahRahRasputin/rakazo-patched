@@ -222,7 +222,7 @@ describe("portable plugin parser", () => {
     expect(byName.reviewer?.content).toContain('call run_subagent with name "reviewer"');
     expect(byName.reviewer?.content).toContain("Check the diff.");
     expect(byName.deploy?.description).toBe("Deploy the project");
-    expect(byName.deploy?.content).toContain("$ARGUMENTS is whatever the user wrote after /deploy");
+    expect(byName.deploy?.content).toContain("$ARGUMENTS is whatever the person wrote after /deploy");
     expect(byName.status?.description).toBe("Show status");
     expect(preview.skipped).toEqual([
       { kind: "editor_only", name: ".lsp.json", reason: "Runs only inside an editor" },

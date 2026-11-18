@@ -579,7 +579,7 @@ function toAgentTool(
                   })),
                 });
                 return {
-                  content: [{ type: "text", text: "Waiting for the user's choice." }],
+                  content: [{ type: "text", text: "Waiting for the person's choice." }],
                   details: args,
                   terminate: true,
                 };

@@ -17,9 +17,9 @@ const scheduleCreateProperties = {
   prompt: {
     type: "string",
     description:
-      'Concrete steps for when the schedule fires: what to use, what to extract, and how to report. Name the connected plugin tools to call when one covers the data (e.g. GITHUB_LIST_RELEASES for owner/repo), preferring them over the computer browser or web search; for a website without one, describe the pages and actions to take in the computer\'s browser. Write the prompt so it makes sense without this chat. It runs in new circumstances: write the user\'s lasting request in full, keeping every standing item and preference, including their swap and skip rules. A decision that only fit this time, such as an item swapped or skipped because it was out of stock or anything the user said "this week" or "this time" about, becomes a condition, never a permanent change ("skip sourdough if it is out of stock", not "skip sourdough").',
+      'Concrete steps for when the schedule fires: what to use, what to extract, and how to report. Name the connected plugin tools to call when one covers the data (e.g. GITHUB_LIST_RELEASES for owner/repo), preferring them over the computer browser or web search; for a website without one, describe the pages and actions to take in the computer\'s browser. Write the prompt so it makes sense without this chat. It runs in new circumstances: write the person\'s lasting request in full, keeping every standing item and preference, including their swap and skip rules. A decision that only fit this time, such as an item swapped or skipped because it was out of stock or anything the person said "this week" or "this time" about, becomes a condition, never a permanent change ("skip sourdough if it is out of stock", not "skip sourdough").',
   },
-  timezone: { type: "string", description: "IANA timezone (default: the user's timezone)." },
+  timezone: { type: "string", description: "IANA timezone (default: the person's timezone)." },
   inChat: {
     type: "boolean",
     description: "Run as a turn in this chat.",
@@ -127,7 +127,7 @@ export function scheduleCreateBranch(
   return {
     type: "object",
     properties,
-    // A watch never runs in its chat: what it read is not the user's words. cron is optional, so
+    // A watch never runs in its chat: what it read is not the person's words. cron is optional, so
     // a routine only events start matches the cron branch alone.
     required: [
       "name",
@@ -332,7 +332,7 @@ export const workTools: ConnectorTool[] = [
   {
     name: "schedule_create",
     description:
-      'Create a reminder or recurring job for this bot. Use for "remind me in 10 minutes" or "every morning send a joke". Repeats: cron or every/unit (min 1 minute), optionally from startAt. One-shot: runAt, delayMinutes, or delaySeconds. A repeating job carries out the user\'s lasting request each time, not a copy of what was decided today. inChat true only when each run continues work this chat is doing, such as updating a draft or plan written here or fixing something started here; it then waits for work under way here. Otherwise false: it runs on time, seeing this chat\'s latest messages and its own earlier results. on: run on events too, or only (no timing); each run receives the event: webhook, git (a GitHub repo webhook the user adds with the routine URL and key; needs no connected app), chat (your connected chat app, by name), email (to your address from the owner or their domain).',
+      'Create a reminder or recurring job for this bot. Use for "remind me in 10 minutes" or "every morning send a joke". Repeats: cron or every/unit (min 1 minute), optionally from startAt. One-shot: runAt, delayMinutes, or delaySeconds. A repeating job carries out the person\'s lasting request each time, not a copy of what was decided today. inChat true only when each run continues work this chat is doing, such as updating a draft or plan written here or fixing something started here; it then waits for work under way here. Otherwise false: it runs on time, seeing this chat\'s latest messages and its own earlier results. on: run on events too, or only (no timing); each run receives the event: webhook, git (a GitHub repo webhook the person adds with the routine URL and key; needs no connected app), chat (your connected chat app, by name), email (to your address from the person or their domain).',
     inputSchema: scheduleCreateInputSchema,
   },
   {
@@ -343,7 +343,7 @@ export const workTools: ConnectorTool[] = [
   {
     name: "schedule_update",
     description:
-      "Edit one of this bot's schedules by routineId instead of cancelling and recreating it. Send only what changes. Timing fields replace the current timing; startAt alone moves the next run of the current repeat. active false pauses it. The result's changes lists each field that changed with its before and after; the prompt is returned only there. It cannot change a watch's interval or timezone; the user can change the interval in the routine's settings on the web. on replaces the routine's events; {} removes them.",
+      "Edit one of this bot's schedules by routineId instead of cancelling and recreating it. Send only what changes. Timing fields replace the current timing; startAt alone moves the next run of the current repeat. active false pauses it. The result's changes lists each field that changed with its before and after; the prompt is returned only there. It cannot change a watch's interval or timezone; the person can change the interval in the routine's settings on the web. on replaces the routine's events; {} removes them.",
     inputSchema: {
       type: "object",
       properties: {
@@ -376,7 +376,7 @@ export const workTools: ConnectorTool[] = [
   {
     name: "end_call",
     description:
-      "End the current voice call. Call this when the user asks to hang up or end the call, or the conversation is clearly finished. Your farewell is spoken as the call ends, so do not also say goodbye in text; finish any remaining work in chat afterwards.",
+      "End the current voice call. Call this when the person asks to hang up or end the call, or the conversation is clearly finished. Your farewell is spoken as the call ends, so do not also say goodbye in text; finish any remaining work in chat afterwards.",
     inputSchema: {
       type: "object",
       properties: {
@@ -395,7 +395,7 @@ export const workTools: ConnectorTool[] = [
   {
     name: "call_user",
     description:
-      "Ring the user's devices for a voice call. Use when the user asked you to call them, or when you have reminded them about the same thing three times and they have not replied. Your opening is spoken the moment they answer, then the conversation continues on the call. If they miss or decline it, the chat shows a missed call. Never call for routine updates a message can carry.",
+      "Ring the person's devices for a voice call. Use when the person asked you to call them, or when you have reminded them about the same thing three times and they have not replied. Your opening is spoken the moment they answer, then the conversation continues on the call. If they miss or decline it, the chat shows a missed call. Never call for routine updates a message can carry.",
     inputSchema: {
       type: "object",
       properties: {
@@ -407,7 +407,7 @@ export const workTools: ConnectorTool[] = [
         opening: {
           type: "string",
           description:
-            "The first thing you say when they answer, one or two short spoken sentences in the user's language. Max 240 chars.",
+            "The first thing you say when they answer, one or two short spoken sentences in the person's language. Max 240 chars.",
         },
       },
       required: ["reason", "opening"],

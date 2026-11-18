@@ -383,9 +383,9 @@ describe("tool question history", () => {
       sealedValues: "sealed",
     };
     const text = blocksToAgentHistoryText([block]);
-    expect(text).toBe("[Gateway asked the user a question during a tool call; the user answered]");
+    expect(text).toBe("[Gateway asked the person a question during a tool call; the person answered]");
     expect(blocksToAgentHistoryText([{ ...block, status: "expired" }])).toContain(
-      "the user did not answer",
+      "the person did not answer",
     );
   });
 });

@@ -334,7 +334,7 @@ describe("request_secret for a one-time code", () => {
     const run = world();
     const [result] = await run.attempt([requestCode({ oneTimeCode })]);
     expect(result).toMatchObject({
-      error: expect.stringContaining("Ask the user to take over and tell them that is why"),
+      error: expect.stringContaining("Ask the person to take over and tell them that is why"),
     });
     expect(run.asked).toEqual([]);
   });

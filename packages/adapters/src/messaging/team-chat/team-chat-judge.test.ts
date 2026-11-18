@@ -610,9 +610,9 @@ describe("team chat engagement judge", () => {
       expect(decision).toEqual({ act: true, reason: "Standing rule matches." });
       if (state === "lookup failure") {
         expect(instructions).toMatch(/Current date and time: .*Z \(UTC\)\./);
-        expect(instructions).not.toContain("Current date and time for the user:");
+        expect(instructions).not.toContain("Current date and time for the person:");
       } else {
-        expect(instructions).toContain("Current date and time for the user:");
+        expect(instructions).toContain("Current date and time for the person:");
         expect(instructions).toContain("(Pacific/Auckland)");
       }
     },

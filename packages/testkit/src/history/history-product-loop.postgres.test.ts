@@ -102,7 +102,7 @@ describe.skipIf(!enabled)("product history diagnostic loop", () => {
               "first check the visible conversation",
             );
             expect(JSON.stringify(request.messages)).toContain(
-              "do not repeat retrieval solely because the user asks again",
+              "do not repeat retrieval solely because the person asks again",
             );
             expect(JSON.stringify(request.messages)).toContain(
               "Do not claim evidence is unavailable while that broader search still has an unexplored cursor.",

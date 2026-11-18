@@ -16,7 +16,10 @@ import {
   STEERING_CONTINUATION_PROMPT,
 } from "@rakazo/core";
 
-import { BACKGROUND_HELPER_TASK_CUE } from "../tasks/background-helpers.prompt.js";
+import {
+  BACKGROUND_HELPER_TASK_CUE,
+  HELPER_TASK_HEADER,
+} from "../tasks/background-helpers.prompt.js";
 
 const running = new Map<string, AbortController>();
 
@@ -161,7 +164,7 @@ export function inferScript(
   // A helper's brief and the result it sends back are generated prompts that quote other words,
   // so they are recognized before any phrase inside them can pick another action.
   if (prompt.toLowerCase().startsWith(BACKGROUND_HELPER_TASK_CUE.toLowerCase())) {
-    const task = prompt.split("Task from the bot (not from the user):\n").at(-1) ?? prompt;
+    const task = prompt.split(HELPER_TASK_HEADER).at(-1) ?? prompt;
     const url = /\bfetch (https?:\/\/\S+)/i.exec(task)?.[1];
     const write = /\bcrm\b/i.test(task);
     return [

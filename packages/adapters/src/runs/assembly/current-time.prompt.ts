@@ -2,11 +2,11 @@
  * Models have no clock. Without an explicit anchor they infer "now" from training data
  * or from timestamps that happen to appear in the conversation, and then reason about
  * deadlines, recency and scheduling from a stale date. Every turn states the real present
- * moment on the user message so that never has to be guessed; it stays out of the system
+ * moment on the person's message so that never has to be guessed; it stays out of the system
  * prompt so the cacheable prefix does not change every call.
  *
- * With the user's IANA timezone the user's local wall-clock time leads, so "tomorrow
- * morning" and "tonight" mean what the user means; the exact UTC instant stays alongside.
+ * With the person's IANA timezone the person's local wall-clock time leads, so "tomorrow
+ * morning" and "tonight" mean what the person means; the exact UTC instant stays alongside.
  * An unknown or invalid timezone falls back to UTC only.
  *
  * Replayed history carries no times, so after a pause a model reads its own earlier "it's
@@ -20,14 +20,14 @@ export function formatCurrentTimeInstruction(
   const iso = now.toISOString().replace(/\.\d{3}Z$/, "Z");
   const local = timeZone ? localDateTime(now, timeZone) : undefined;
   const anchor = local
-    ? `Current date and time for the user: ${local} (${timeZone}). That is ${iso} (UTC).`
+    ? `Current date and time for the person: ${local} (${timeZone}). That is ${iso} (UTC).`
     : `Current date and time: ${weekdayIn(now, "UTC")}, ${iso} (UTC).`;
   return [
     anchor,
     previousMessageAt && previousMessageNote(now, previousMessageAt, local ? timeZone : undefined),
     local
-      ? "Use the user's time zone for times you mention unless they ask otherwise, judge what is past, upcoming, or overdue from it, and write absolute dates rather than relative ones."
-      : "Use it to judge what is past, upcoming, or overdue, convert it to the user's time zone when one is known, and write absolute dates rather than relative ones.",
+      ? "Use the person's time zone for times you mention unless they ask otherwise, judge what is past, upcoming, or overdue from it, and write absolute dates rather than relative ones."
+      : "Use it to judge what is past, upcoming, or overdue, convert it to the person's time zone when one is known, and write absolute dates rather than relative ones.",
     "Never infer today's date from your training data or from timestamps quoted in the conversation.",
   ]
     .filter(Boolean)

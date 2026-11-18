@@ -9,6 +9,6 @@ export function lateRoutineRunInstruction(dueAt: Date, now: Date, timezone: stri
       : `${date.toISOString().replace(/\.\d{3}Z$/, "Z")} (UTC)`;
   return [
     `This scheduled run started late: it was due ${format(dueAt)} and started ${format(now)}.`,
-    "Adapt anything that depends on the time of day to the actual time, skip steps that no longer make sense, and mention the delay when it matters to the user.",
+    "Adapt anything that depends on the time of day to the actual time, skip steps that no longer make sense, and mention the delay when it matters to the person.",
   ].join(" ");
 }

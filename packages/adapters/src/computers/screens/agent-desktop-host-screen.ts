@@ -36,7 +36,7 @@ export interface AgentDesktopHostScreenOptions {
 }
 
 export const SCREEN_DRIVER_BLOCKED_MESSAGE =
-  "Windows stopped screen control from starting on this computer. Security settings such as Smart App Control can block it; ask the user to check them.";
+  "Windows stopped screen control from starting on this computer. Security settings such as Smart App Control can block it; ask the person to check them.";
 
 interface AgentDesktopWindow {
   id: string;
@@ -189,7 +189,7 @@ export function createAgentDesktopHostScreen(options: AgentDesktopHostScreenOpti
     return new HostScreenError(
       near.length
         ? `No open app is named exactly "${query}". Open apps with similar names: ${near.join(", ")}.`
-        : `No app named "${query}" is open. Ask the user to open it, then try again.`,
+        : `No app named "${query}" is open. Ask the person to open it, then try again.`,
     );
   }
 
@@ -225,8 +225,8 @@ export function createAgentDesktopHostScreen(options: AgentDesktopHostScreenOpti
     if (!window)
       throw new HostScreenError(
         usable.length
-          ? `${name} is minimized. Ask the user to restore its window, then try again.`
-          : `${name} is open but shows no window. Ask the user to open one, then try again.`,
+          ? `${name} is minimized. Ask the person to restore its window, then try again.`
+          : `${name} is open but shows no window. Ask the person to open one, then try again.`,
       );
     return { name, windowId: window.id, ...(window.title ? { title: window.title } : {}) };
   }
@@ -322,17 +322,17 @@ export function createAgentDesktopHostScreen(options: AgentDesktopHostScreenOpti
       case "click":
         if (action.element === undefined)
           throw new HostScreenError(
-            "On Windows, click an element number; clicking a point would move the user's pointer.",
+            "On Windows, click an element number; clicking a point would move the person's pointer.",
           );
         if (action.double || action.button === "right")
           throw new HostScreenError(
-            "On Windows, double and right clicks would move the user's pointer. Click the element, or use set or menu instead.",
+            "On Windows, double and right clicks would move the person's pointer. Click the element, or use set or menu instead.",
           );
         await run("click", "--", ref(found, action.element));
         return;
       case "type":
         throw new HostScreenError(
-          "On Windows, type would take over the user's keyboard. Use set with the field's whole new text instead.",
+          "On Windows, type would take over the person's keyboard. Use set with the field's whole new text instead.",
         );
       case "set": {
         const element = ref(found, action.element);
@@ -363,7 +363,7 @@ export function createAgentDesktopHostScreen(options: AgentDesktopHostScreenOpti
       case "scroll": {
         if (action.element === undefined && action.x !== undefined)
           throw new HostScreenError(
-            "On Windows, scroll an element number; scrolling at a point would move the user's pointer.",
+            "On Windows, scroll an element number; scrolling at a point would move the person's pointer.",
           );
         const area =
           action.element !== undefined
@@ -465,7 +465,7 @@ function refusal(app: string, code: string, message: string | undefined) {
     case "AMBIGUOUS_TARGET":
       return `${app} changed since the last observation. Observe it again and use the new element numbers.`;
     case "POLICY_DENIED":
-      return `Windows won't send that to ${app} without taking over the user's pointer or keyboard. Use click, set, or menu instead.`;
+      return `Windows won't send that to ${app} without taking over the person's pointer or keyboard. Use click, set, or menu instead.`;
     case "PERM_DENIED":
       return `Windows doesn't let Rakazo use ${app}, usually because it runs as administrator.`;
     case "APP_UNRESPONSIVE":

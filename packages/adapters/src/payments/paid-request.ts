@@ -54,7 +54,7 @@ export async function executePaidRequest(
   const parsed = PaidRequestInput.safeParse(args);
   if (!parsed.success) return plain(inputError(parsed.error));
   if (!walletSupports(provider, "http_payment"))
-    return plain({ error: "The user's wallet can't pay HTTP requests." });
+    return plain({ error: "The person's wallet can't pay HTTP requests." });
   const input = parsed.data;
   if ("purchase" in input) return payApproved(deps, provider, context, input.purchase);
 
@@ -80,7 +80,7 @@ export async function executePaidRequest(
   if (!challenge || challenge.amount > MAX_PAYMENT_MINOR_UNITS) {
     return plain({
       ...responseView(response),
-      error: "The user's wallet can't pay what this request asks for.",
+      error: "The person's wallet can't pay what this request asks for.",
     });
   }
   // Headers and body can hold personal data or keys, so the request to send again is sealed.
@@ -128,7 +128,7 @@ async function payApproved(
   if (purchase.status === "completed" || purchase.status === "failed") {
     return plain({
       error:
-        "This purchase was already used. To pay again, call paid_request with the request, which asks the user again.",
+        "This purchase was already used. To pay again, call paid_request with the request, which asks the person again.",
     });
   }
   if (purchase.status !== "approved") {
@@ -202,7 +202,7 @@ async function payApproved(
         id: approved.id,
         status: "completed",
         error:
-          "The paid request did not finish, so it is unknown whether the payment went through. Ask the user before paying again.",
+          "The paid request did not finish, so it is unknown whether the payment went through. Ask the person before paying again.",
       },
       redactions,
     };
@@ -217,7 +217,7 @@ async function payApproved(
         ...(accepted
           ? {}
           : {
-              note: "The payment token is spent. To try again, call paid_request with the request, which asks the user again.",
+              note: "The payment token is spent. To try again, call paid_request with the request, which asks the person again.",
             }),
       },
       redactions,

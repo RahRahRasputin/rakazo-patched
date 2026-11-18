@@ -152,7 +152,7 @@ export const computerTools: ConnectorTool[] = [
               },
               card: {
                 type: "string",
-                description: "Saved card for fill_card, with site; each call asks the user.",
+                description: "Saved card for fill_card, with site; each call asks the person.",
               },
               site: {
                 type: "string",
@@ -208,7 +208,7 @@ export const computerTools: ConnectorTool[] = [
   {
     name: "attach_file",
     description:
-      "Attach a workspace file from this bot's home to the chat thread as an image or common file. The user sees it; you do not. The file stays in place; users can open it from the message and from the Artifacts tab. For a self-contained HTML page, document, or anything else meant to be viewed on its own — give it name and description: a title and a one-line summary. Skip them for an ordinary attachment like a log file or export. To UPDATE something you already made, call this again with the exact same name — it becomes a new version of that same artifact instead of a separate one; a different name always starts a new artifact.",
+      "Attach a workspace file from this bot's home to the chat thread as an image or common file. The person sees it; you do not. The file stays in place; people can open it from the message and from the Artifacts tab. For a self-contained HTML page, document, or anything else meant to be viewed on its own — give it name and description: a title and a one-line summary. Skip them for an ordinary attachment like a log file or export. To UPDATE something you already made, call this again with the exact same name — it becomes a new version of that same artifact instead of a separate one; a different name always starts a new artifact.",
     inputSchema: {
       type: "object",
       properties: {
@@ -222,7 +222,7 @@ export const computerTools: ConnectorTool[] = [
   {
     name: "shell",
     description:
-      "Run a command inside this bot's computer. cwd defaults to the bot's folder on a Team Computer and the workspace root on a Private Computer. Output can arrive while the command is still running; tell the user any one-time code or sign-in URL in that output. A command is stopped after a few minutes, so on Linux or macOS start longer work, such as a coding agent CLI, as its own statement `nohup <command> < /dev/null > <log> 2>&1 &`, never after `&&`, and read the log to follow it.",
+      "Run a command inside this bot's computer. cwd defaults to the bot's folder on a Team Computer and the workspace root on a Private Computer. Output can arrive while the command is still running; tell the person any one-time code or sign-in URL in that output. A command is stopped after a few minutes, so on Linux or macOS start longer work, such as a coding agent CLI, as its own statement `nohup <command> < /dev/null > <log> 2>&1 &`, never after `&&`, and read the log to follow it.",
     inputSchema: {
       type: "object",
       properties: {
@@ -235,7 +235,7 @@ export const computerTools: ConnectorTool[] = [
   {
     name: "user_computer_shell",
     description:
-      "Run a command on the user's own computer. Use only when the task needs their local files, credentials, or network. cwd defaults to their home folder and must stay inside it.",
+      "Run a command on the person's own computer. Use only when the task needs their local files, credentials, or network. cwd defaults to their home folder and must stay inside it.",
     inputSchema: {
       type: "object",
       properties: {
@@ -248,7 +248,7 @@ export const computerTools: ConnectorTool[] = [
   {
     name: "user_computer_observe",
     description:
-      "Look at one app on the user's own computer without disturbing them: opens it in the background if needed and returns its window as numbered accessibility rows ([N]) and a screenshot. query narrows the rows. Use only when the task needs an app on their computer.",
+      "Look at one app on the person's own computer without disturbing them: opens it in the background if needed and returns its window as numbered accessibility rows ([N]) and a screenshot. query narrows the rows. Use only when the task needs an app on their computer.",
     inputSchema: {
       type: "object",
       properties: {
@@ -261,7 +261,7 @@ export const computerTools: ConnectorTool[] = [
   {
     name: "user_computer_act",
     description:
-      'Act in one app on the user\'s own computer, in the background, and return its window afterwards. Observe it first. Up to 24 ordered actions: click (element, or x,y in screenshot pixels; button, double), type (text, into element or the focused field), set (value of element: a pop-up\'s choice, a field\'s whole text), key (key such as return, tab, escape, up, a; modifiers cmd, shift, option, ctrl), scroll (direction, amount, at element or x,y), menu (path from the menu bar, like ["File","New"]; use it instead of shortcuts), wait (ms). Element numbers come from the latest observation of that app.',
+      'Act in one app on the person\'s own computer, in the background, and return its window afterwards. Observe it first. Up to 24 ordered actions: click (element, or x,y in screenshot pixels; button, double), type (text, into element or the focused field), set (value of element: a pop-up\'s choice, a field\'s whole text), key (key such as return, tab, escape, up, a; modifiers cmd, shift, option, ctrl), scroll (direction, amount, at element or x,y), menu (path from the menu bar, like ["File","New"]; use it instead of shortcuts), wait (ms). Element numbers come from the latest observation of that app.',
     inputSchema: {
       type: "object",
       properties: {
@@ -327,7 +327,7 @@ export const computerTools: ConnectorTool[] = [
   {
     name: "request_takeover",
     description:
-      "Ask the user to take over the computer screen for CAPTCHA, payment, passkeys, or other protected input request_secret cannot take. Never ask the user to paste protected values in chat.",
+      "Ask the person to take over the computer screen for CAPTCHA, payment, passkeys, or other protected input request_secret cannot take. Never ask the person to paste protected values in chat.",
     inputSchema: {
       type: "object",
       properties: { reason: { type: "string" } },
@@ -337,7 +337,7 @@ export const computerTools: ConnectorTool[] = [
   {
     name: "connect_app",
     description:
-      "Show an inline card to connect an app in this chat when you need an unconnected app or the user asks to connect one. Then wait for the user instead of directing them elsewhere.",
+      "Show an inline card to connect an app in this chat when you need an unconnected app or the person asks to connect one. Then wait for the person instead of directing them elsewhere.",
     inputSchema: {
       type: "object",
       properties: { app: { type: "string", minLength: 1, maxLength: 100 } },

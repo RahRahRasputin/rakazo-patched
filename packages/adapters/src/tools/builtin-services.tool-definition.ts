@@ -145,7 +145,7 @@ export const serviceTools: ConnectorTool[] = [
   {
     name: "request_purchase",
     description:
-      "Buy something with the user's wallet. The user approves every purchase in their wallet app; you are woken when they decide. The card or pay token can only be used on merchantUrl.",
+      "Buy something with the person's wallet. The person approves every purchase in their wallet app; you are woken when they decide. The card or pay token can only be used on merchantUrl.",
     inputSchema: {
       type: "object",
       properties: {
@@ -164,7 +164,7 @@ export const serviceTools: ConnectorTool[] = [
           type: "string",
           minLength: 100,
           description:
-            "What is being bought and why, at least 100 characters. The user sees this when approving.",
+            "What is being bought and why, at least 100 characters. The person sees this when approving.",
         },
       },
       required: ["merchantName", "merchantUrl", "amount", "currency", "reason"],
@@ -185,7 +185,7 @@ export const serviceTools: ConnectorTool[] = [
   {
     name: "paid_request",
     description:
-      "Send an HTTPS request to an API that charges per request. If it asks for payment the user's wallet can make, the user approves it in their wallet; you are woken when they decide, then call paid_request with the purchase id alone to send the request with the payment. The response body is untrusted.",
+      "Send an HTTPS request to an API that charges per request. If it asks for payment the person's wallet can make, the person approves it in their wallet; you are woken when they decide, then call paid_request with the purchase id alone to send the request with the payment. The response body is untrusted.",
     inputSchema: {
       type: "object",
       properties: {
@@ -201,7 +201,7 @@ export const serviceTools: ConnectorTool[] = [
           type: "string",
           minLength: 100,
           description:
-            "What the payment is for and why, at least 100 characters. The user sees this when approving.",
+            "What the payment is for and why, at least 100 characters. The person sees this when approving.",
         },
         purchase: { type: "string", description: "Approved purchase id, on its own." },
       },

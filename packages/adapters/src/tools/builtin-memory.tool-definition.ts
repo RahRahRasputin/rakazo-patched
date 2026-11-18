@@ -76,7 +76,7 @@ export const memoryTools: ConnectorTool[] = [
   {
     name: "claim_email_address",
     description:
-      "Give yourself a permanent email address, name@ this server's email domain, for example to sign up for a service. Suggest a short name based on your own and call this only once your owner has agreed to that exact name: it can never change or be given up, and nobody else can ever have it.",
+      "Give yourself a permanent email address, name@ this server's email domain, for example to sign up for a service. Suggest a short name based on your own and call this only once the person has agreed to that exact name: it can never change or be given up, and nobody else can ever have it.",
     inputSchema: {
       type: "object",
       properties: {
@@ -92,7 +92,7 @@ export const memoryTools: ConnectorTool[] = [
   {
     name: "send_email",
     description:
-      "Send plain-text email from your own address to your owner's verified address or an operator-approved recipient. If external replies are enabled, you can also reply to the authenticated sender of an incoming email received in the last 30 days. Pass its id as inReplyTo to keep the thread; the subject defaults to Re: its subject. Every To and CC recipient, including failed attempts, counts against the account's rolling 24-hour allowance, initially ten deliveries shared by all its bots. Replies come back to your inbox. Write as yourself, never as your owner. Never put passwords or codes in an email.",
+      "Send plain-text email from your own address to the person's verified address or an operator-approved recipient. If external replies are enabled, you can also reply to the authenticated sender of an incoming email received in the last 30 days. Pass its id as inReplyTo to keep the thread; the subject defaults to Re: its subject. Every To and CC recipient, including failed attempts, counts against the account's rolling 24-hour allowance, initially ten deliveries shared by all its bots. Replies come back to your inbox. Write as yourself, never as the person. Never put passwords or codes in an email.",
     inputSchema: {
       type: "object",
       properties: {

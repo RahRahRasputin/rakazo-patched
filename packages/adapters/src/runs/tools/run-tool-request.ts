@@ -370,12 +370,12 @@ async function askingLoginUse(
   if (!approved)
     return {
       error:
-        "This signs in with a saved login the user has not approved, so nothing was typed. Call the tool again; that asks the user.",
+        "This signs in with a saved login the person has not approved, so nothing was typed. Call the tool again; that asks the person.",
     };
   if (approved.login !== wanted.login || approved.fields.join("\n") !== wanted.fields.join("\n"))
     return {
       error:
-        "This signs in with a saved login the user has not approved for these fields, so nothing was typed. Call the tool again; that asks the user.",
+        "This signs in with a saved login the person has not approved for these fields, so nothing was typed. Call the tool again; that asks the person.",
     };
   return approved;
 }
@@ -413,10 +413,10 @@ export async function prepareToolRequest(
     if (!ctx.source.userComputerOwner || !deps.userDevices)
       return refusal(
         "user_computer_unavailable",
-        "The user's computer is not available in this run.",
+        "The person's computer is not available in this run.",
       );
     if (isSubagentToolExecution(executionId))
-      return refusal("helper_user_computer", "Helpers cannot use the user's computer.");
+      return refusal("helper_user_computer", "Helpers cannot use the person's computer.");
   }
   // The card shows and the effect stores the events in their short form, so padding can't hide one.
   if ((name === "schedule_create" || name === "schedule_update") && "on" in args) {
@@ -519,7 +519,7 @@ export async function prepareToolRequest(
       )
         return refusal(
           "card_not_approved",
-          "This types a saved card the user has not approved, so nothing was typed. Call the tool again with only that card; that asks the user.",
+          "This types a saved card the person has not approved, so nothing was typed. Call the tool again with only that card; that asks the person.",
         );
       let cardUse = approvedCard;
       if (!cardUse) {
@@ -561,7 +561,7 @@ export async function prepareToolRequest(
       )
         return refusal(
           "purchase_page_changed",
-          "The page changed since the user approved this purchase, so nothing was pressed. Look at the screen and try again.",
+          "The page changed since the person approved this purchase, so nothing was pressed. Look at the screen and try again.",
         );
     }
     const purchase = approved ?? (await detectPurchase(ctx, name, rest));
@@ -579,7 +579,7 @@ export async function prepareToolRequest(
     if (purchase && !approved && nextApprovedTool === name)
       return refusal(
         "purchase_not_approved",
-        "This would complete a purchase, which the user has not approved, so nothing was pressed. Call the tool again with only that step; that asks the user.",
+        "This would complete a purchase, which the person has not approved, so nothing was pressed. Call the tool again with only that step; that asks the person.",
       );
     if (purchase) {
       args = { ...args, purchaseApproval: purchase };

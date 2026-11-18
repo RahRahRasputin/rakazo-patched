@@ -409,7 +409,7 @@ async function teamChatRun(input: {
     sawOwnerToolResult: JSON.stringify(request.history).includes(OWNER_TOOL_RESULT),
     sawPrivateReply: JSON.stringify(request.history).includes(PRIVATE_REPLY),
     sawChannelHistory: JSON.stringify(request.history).includes(CHANNEL_HISTORY),
-    toldNonOwner: context.includes("someone other than your owner"),
+    toldNonOwner: context.includes("someone other than your person"),
   };
 }
 

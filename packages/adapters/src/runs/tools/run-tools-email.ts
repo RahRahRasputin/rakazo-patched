@@ -369,7 +369,7 @@ async function sendEmail(ctx: RunContext, call: ToolCall) {
   if (earlier) {
     return call.finish({
       error:
-        "An earlier attempt to send this email was interrupted and may or may not have gone out. Tell your owner instead of sending it again.",
+        "An earlier attempt to send this email was interrupted and may or may not have gone out. Tell the person instead of sending it again.",
       id: earlier.id,
     });
   }

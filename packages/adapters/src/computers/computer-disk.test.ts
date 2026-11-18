@@ -75,7 +75,7 @@ describe("computer disk", () => {
     );
     expect(diskNoteInstruction({ diskUsedBytes: null, diskFreeBytes: null })).toBe(undefined);
     expect(diskNoteInstruction({ diskUsedBytes: 72n * GiB, diskFreeBytes: 8n * GiB })).toBe(
-      "The computer's disk is 90% full (9 GB free). Free space by removing build output and caches you no longer need, or tell the user.",
+      "The computer's disk is 90% full (9 GB free). Free space by removing build output and caches you no longer need, or tell the person.",
     );
     expect(
       diskNoteInstruction({ diskUsedBytes: 80n * GiB, diskFreeBytes: 500_000_000n }),

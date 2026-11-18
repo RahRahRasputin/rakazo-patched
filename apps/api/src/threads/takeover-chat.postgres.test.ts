@@ -446,7 +446,7 @@ describePostgres("chat replies during screen takeover (PostgreSQL)", () => {
       async *run(request: AgentRunRequest) {
         requests.push(request);
         expect(request.resumeFromCheckpoint).toBe("takeover");
-        expect(request.instructions).not.toContain("The user has the screen");
+        expect(request.instructions).not.toContain("The person has the screen");
         expect(request.tools.map((tool) => tool.name)).toEqual(
           expect.arrayContaining(["computer_act", "browser_navigate"]),
         );
@@ -552,7 +552,7 @@ describePostgres("chat replies during screen takeover (PostgreSQL)", () => {
       async *run(request: AgentRunRequest) {
         requests.push(request);
         expect(request.resumeFromCheckpoint).toBe("takeover");
-        expect(request.instructions).not.toContain("The user has the screen");
+        expect(request.instructions).not.toContain("The person has the screen");
         expect(request.tools.map((tool) => tool.name)).toEqual(
           expect.arrayContaining(["computer_act", "browser_navigate"]),
         );

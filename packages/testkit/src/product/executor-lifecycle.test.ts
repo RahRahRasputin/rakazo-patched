@@ -358,7 +358,7 @@ describeIntegration("run executor lifecycle", () => {
       }),
     ]);
     expect(continuation).toMatchObject({ status: "queued", trigger: "follow_up" });
-    expect(continuation.task.prompt).toBe("Respond to the user's steering context.");
+    expect(continuation.task.prompt).toBe("Respond to the person's steering context.");
     expect(steering).toHaveLength(2);
     expect(steering).toEqual(
       expect.arrayContaining([
@@ -441,7 +441,7 @@ describeIntegration("run executor lifecycle", () => {
     ).resolves.toMatchObject({
       status: "queued",
       trigger: "follow_up",
-      task: { prompt: "Respond to the user's steering context." },
+      task: { prompt: "Respond to the person's steering context." },
     });
     await expect(
       db.steeringMessage.findFirstOrThrow({ where: { botId: seeded.bot.id } }),

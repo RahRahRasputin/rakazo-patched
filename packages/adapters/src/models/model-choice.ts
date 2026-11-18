@@ -134,7 +134,7 @@ export async function resolveModelChoice(
   if (ranked.length)
     return {
       ok: false,
-      error: `"${echoedQuery(input.model)}" matches several models. Ask the user which one, or pass its id as model: ${ranked
+      error: `"${echoedQuery(input.model)}" matches several models. Ask the person which one, or pass its id as model: ${ranked
         .slice(0, CANDIDATE_LIMIT)
         .map((choice) => `${choiceKey(choice)} (${choice.label})`)
         .join(", ")}.`,

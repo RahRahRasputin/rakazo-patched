@@ -6,13 +6,13 @@ import type { PurchaseApproval } from "../payments/purchase-gate.js";
 
 const PERIOD_TEXT = { day: "a day", week: "a week", month: "a month", none: "in total" } as const;
 
-/** What the bot is told when a payment is refused by the user's spending limit. */
+/** What the bot is told when a payment is refused by the person's spending limit. */
 export function spendingRefusalError(refusal: PaymentRefusal): string {
   const { limit, spent } = refusal;
   const money = (amount: number) => formatMinorAmount(amount, limit.currency);
   if (refusal.refused === "unchecked")
-    return `The total couldn't be read in ${limit.currency.toUpperCase()}, the currency of the user's spending limit, so it can't be counted against it and nothing was paid. Don't retry; tell the user.`;
-  return `This would go over the user's spending limit of ${money(limit.amount)} ${PERIOD_TEXT[limit.period]} (${money(spent)} spent), so nothing was paid. Don't retry; tell the user.`;
+    return `The total couldn't be read in ${limit.currency.toUpperCase()}, the currency of the person's spending limit, so it can't be counted against it and nothing was paid. Don't retry; tell the person.`;
+  return `This would go over the person's spending limit of ${money(limit.amount)} ${PERIOD_TEXT[limit.period]} (${money(spent)} spent), so nothing was paid. Don't retry; tell the person.`;
 }
 
 type Run = { userId: string; spaceId: string; botId: string; threadId: string };

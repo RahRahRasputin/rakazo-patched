@@ -106,7 +106,7 @@ export async function connectApp(
   return {
     status: "pending",
     message: reconnect
-      ? `${shown} The saved connection gives this app no tools, so the user must reconnect it. Wait for them to do so.`
-      : `${shown} Wait for the user to connect the app.`,
+      ? `${shown} The saved connection gives this app no tools, so the person must reconnect it. Wait for them to do so.`
+      : `${shown} Wait for the person to connect the app.`,
   };
 }

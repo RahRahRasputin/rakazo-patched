@@ -28,7 +28,7 @@ function secretAskToolSurface() {
       allowPrivateHttpOrigins
         ? "HTTPS origin, or an HTTP origin on a private LAN host"
         : "HTTPS origin"
-    }, or connectionId for a one-use connector code. Credential names must start with a lowercase letter and use only lowercase letters, digits, hyphens, or underscores (max 64 characters). For a website login the user wants saved, use auth {type:"login"} with the HTTPS origin of the sign-in form's page or frame, and fields with the labels the site signs in with (default Username and Password); the card asks for each, and browser_act fill_secret types one by its label. The user decides which fields are hidden: a hidden field is typed only into a password field. A field whose label is an ID, phone, email or username starts visible on the card and any other starts hidden, so label each field by what the site calls it. If one is refused in another field, ask again with replace true so the user can make it visible. The user may choose not to save a login: the result then says saved false, the login works only until this run ends, and a later run must ask again, so never say it was saved. For a value this bot's shell commands need, use auth {type:"command"} with no origin; it is exported to them as an environment variable named after the credential in upper case with hyphens as underscores (netbird-setup-key becomes $NETBIRD_SETUP_KEY). Use auth {type:"card"} for a payment card, which you see only as brand, last four and expiry, and {type:"contact"} for an address, phone or email named for who or where (home, mom); neither has an origin. Existing named credentials are reused unless replace is true, as is a site's saved login. A sign-in without a password, such as fields ["ID number","Phone"], still uses auth {type:"login"}; never ask for those in chat or on the screen. For a code the site texted or emailed, use oneTimeCode {origin} with the page's HTTPS origin: you never see the code, browser_act fill_code types it, and a wrong or new code needs a new request. Never ask for a code in chat. For CAPTCHA, passkeys, or anything else that needs the live desktop, call request_takeover.`,
+    }, or connectionId for a one-use connector code. Credential names must start with a lowercase letter and use only lowercase letters, digits, hyphens, or underscores (max 64 characters). For a website login the person wants saved, use auth {type:"login"} with the HTTPS origin of the sign-in form's page or frame, and fields with the labels the site signs in with (default Username and Password); the card asks for each, and browser_act fill_secret types one by its label. The person decides which fields are hidden: a hidden field is typed only into a password field. A field whose label is an ID, phone, email or username starts visible on the card and any other starts hidden, so label each field by what the site calls it. If one is refused in another field, ask again with replace true so the person can make it visible. The person may choose not to save a login: the result then says saved false, the login works only until this run ends, and a later run must ask again, so never say it was saved. For a value this bot's shell commands need, use auth {type:"command"} with no origin; it is exported to them as an environment variable named after the credential in upper case with hyphens as underscores (netbird-setup-key becomes $NETBIRD_SETUP_KEY). Use auth {type:"card"} for a payment card, which you see only as brand, last four and expiry, and {type:"contact"} for an address, phone or email named for who or where (home, mom); neither has an origin. Existing named credentials are reused unless replace is true, as is a site's saved login. A sign-in without a password, such as fields ["ID number","Phone"], still uses auth {type:"login"}; never ask for those in chat or on the screen. For a code the site texted or emailed, use oneTimeCode {origin} with the page's HTTPS origin: you never see the code, browser_act fill_code types it, and a wrong or new code needs a new request. Never ask for a code in chat. For CAPTCHA, passkeys, or anything else that needs the live desktop, call request_takeover.`,
     inputSchema: {
       oneOf: [
         {
@@ -43,7 +43,7 @@ function secretAskToolSurface() {
             ),
             replace: {
               type: "boolean",
-              description: "Ask the user to replace a saved value or a login's site.",
+              description: "Ask the person to replace a saved value or a login's site.",
             },
             fields: {
               type: "array",
@@ -93,7 +93,7 @@ export const conversationTools: ConnectorTool[] = [
   {
     name: "ask_user",
     description:
-      "Ask the user one short multiple-choice question with tappable options, then wait for their selection. Use this instead of asking them to type when two to four concise choices are enough. Put the content the user is deciding about, such as a draft email, in `detail`.",
+      "Ask the person one short multiple-choice question with tappable options, then wait for their selection. Use this instead of asking them to type when two to four concise choices are enough. Put the content the person is deciding about, such as a draft email, in `detail`.",
     inputSchema: {
       type: "object",
       properties: {
@@ -114,7 +114,7 @@ export const conversationTools: ConnectorTool[] = [
     name: "message_user",
     // Read lazily: the cap comes from process.env, which may be filled after import.
     get description() {
-      return `Post a short progress update to the user in this chat immediately. Does not end your turn. Use sparingly during long work for high-signal beats (what you are checking, then a result). Do not dump tool logs, thinking, or a play-by-play of every call. HARD LIMIT: cut off silently at ${messageUserMaxLength()} characters, so never put your final answer, a report, or any long-form content here \u2014 it will arrive mangled and the user will never see the rest. Always write your complete final answer in your normal reply, not here.`;
+      return `Post a short progress update to the person in this chat immediately. Does not end your turn. Use sparingly during long work for high-signal beats (what you are checking, then a result). Do not dump tool logs, thinking, or a play-by-play of every call. HARD LIMIT: cut off silently at ${messageUserMaxLength()} characters, so never put your final answer, a report, or any long-form content here \u2014 it will arrive mangled and the person will never see the rest. Always write your complete final answer in your normal reply, not here.`;
     },
     get inputSchema() {
       return {
@@ -210,7 +210,7 @@ export const conversationTools: ConnectorTool[] = [
   {
     name: "save_page",
     description:
-      'Save a page the user opens from the chat: a dashboard, report, tracker or comparison. Pass the page as JSX source written against the Rakazo page kit; call with {"help": true} first for the kit guide. Problems come back with line numbers and nothing is saved. To change a page, pass its pageId with edits (applied together, or not at all) or full source; pass only pageId to read its current source. A result with sharedByLink is a page the user shared: anyone with its link sees each save at once.',
+      'Save a page the person opens from the chat: a dashboard, report, tracker or comparison. Pass the page as JSX source written against the Rakazo page kit; call with {"help": true} first for the kit guide. Problems come back with line numbers and nothing is saved. To change a page, pass its pageId with edits (applied together, or not at all) or full source; pass only pageId to read its current source. A result with sharedByLink is a page the person shared: anyone with its link sees each save at once.',
     inputSchema: {
       type: "object",
       properties: {
@@ -233,7 +233,7 @@ export const conversationTools: ConnectorTool[] = [
   {
     name: "add_mcp_server",
     description:
-      "Connect a remote MCP tool server to this Space when the user asks you to add one and provides the details (URL, optional token/headers). The server is created immediately and an approval card appears in the chat; its tools reach you once the user approves it there. Do not invent endpoints; only use details the user provided. Local (stdio) servers can only be added by an admin in Settings.",
+      "Connect a remote MCP tool server to this Space when the person asks you to add one and provides the details (URL, optional token/headers). The server is created immediately and an approval card appears in the chat; its tools reach you once the person approves it there. Do not invent endpoints; only use details the person provided. Local (stdio) servers can only be added by an admin in Settings.",
     inputSchema: {
       type: "object",
       properties: {

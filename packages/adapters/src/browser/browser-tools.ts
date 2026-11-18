@@ -549,13 +549,13 @@ function formatBrowserResult<
     if (desktopTools) {
       return {
         ...result,
-        note: "Answer it with computer_act, or request_takeover if the user should decide. Do not repeat the step that opened it.",
+        note: "Answer it with computer_act, or request_takeover if the person should decide. Do not repeat the step that opened it.",
       };
     }
     const { fallback: _fallback, ...rest } = result;
     return {
       ...rest,
-      note: "Use request_takeover so the user can answer it. Do not repeat the step that opened it.",
+      note: "Use request_takeover so the person can answer it. Do not repeat the step that opened it.",
     };
   }
   if (desktopTools) {

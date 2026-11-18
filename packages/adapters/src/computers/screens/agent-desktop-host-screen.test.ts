@@ -92,7 +92,7 @@ describe("agent-desktop host screen", () => {
   it("drives only the exact program named, never a near match or itself", async () => {
     const { screen, calls } = cli({ launch: () => refused("APP_NOT_FOUND") });
     await expect(screen.observe(scope, "Photoshop")).rejects.toThrow(
-      'No app named "Photoshop" is open. Ask the user to open it, then try again.',
+      'No app named "Photoshop" is open. Ask the person to open it, then try again.',
     );
     await expect(screen.observe(scope, "note")).rejects.toThrow(
       'No open app is named exactly "note". Open apps with similar names: notepad, notes-sync.',
@@ -121,7 +121,7 @@ describe("agent-desktop host screen", () => {
   it("asks the user to restore a minimized window rather than raising it", async () => {
     const { screen } = cli({ "list-windows": () => ok([notepad[0]]) });
     await expect(screen.observe(scope, "notepad")).rejects.toThrow(
-      "notepad is minimized. Ask the user to restore its window, then try again.",
+      "notepad is minimized. Ask the person to restore its window, then try again.",
     );
   });
 
@@ -242,7 +242,7 @@ describe("agent-desktop host screen", () => {
       screen.act(scope, "notepad", [{ kind: "key", key: "w", modifiers: ["cmd"] }]),
     ).resolves.toEqual({
       completed: 1,
-      error: 'No app named "notepad" is open. Ask the user to open it, then try again.',
+      error: 'No app named "notepad" is open. Ask the person to open it, then try again.',
     });
   });
 

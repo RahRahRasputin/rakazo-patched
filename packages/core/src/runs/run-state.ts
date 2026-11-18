@@ -139,7 +139,7 @@ export function computerUsingRuns(now: Date = new Date()) {
 }
 
 /** Prompt of a run created to answer messages that waited behind another turn. */
-export const STEERING_CONTINUATION_PROMPT = "Respond to the user's steering context.";
+export const STEERING_CONTINUATION_PROMPT = "Respond to the person's steering context.";
 
 /**
  * Whether a run reads its chat's whole history from this trigger alone. The creation intro reads

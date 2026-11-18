@@ -178,7 +178,7 @@ export async function holdSharedPageSave(
   if (redactSecrets(lines.join("\n"), ctx.secrets).length > MAX_APPROVAL_DETAIL_LENGTH)
     return {
       error:
-        "This page is shared by link, and this change is too long to show the user for approval. Save it as several smaller edits.",
+        "This page is shared by link, and this change is too long to show the person for approval. Save it as several smaller edits.",
     };
   const title = page.title.replace(new RegExp(CARD_TITLE_ESCAPED_CHARACTERS, "g"), "\\$&");
   request.args = { ...args, approvedVersion: page.currentVersion };

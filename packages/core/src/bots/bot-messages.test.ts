@@ -274,7 +274,7 @@ describe("group members roster", () => {
     });
     const lines = context.split("\n").filter((line) => line.includes('"[Name]:"'));
     expect(lines).toEqual([
-      'In the conversation so far, messages from other members start with "[Name]:", messages from the user start with "[User]:", and your own earlier messages carry no label. Never begin your replies with a label.',
+      'In the conversation so far, messages from other members start with "[Name]:", messages from the person start with "[User]:", and your own earlier messages carry no label. Never begin your replies with a label.',
     ]);
   });
 
@@ -298,7 +298,7 @@ describe("group members roster", () => {
     expect(context).toContain("Investigates source-backed questions");
     expect(context).toContain("Analyst (id: b_2)");
     expect(context).toContain("handoff_to_bot");
-    expect(context).toContain("One bot owns each stage.");
+    expect(context).toContain("One bot holds each stage.");
     expect(context).toContain("You are Researcher (id: b_1)");
     expect(context).toContain("hand the result back to the bot that handed it to you");
     expect(context).toContain("Never hand back unfinished work");

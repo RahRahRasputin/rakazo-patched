@@ -81,14 +81,14 @@ export const agentConnectionTools: ConnectorTool[] = [
   {
     name: "connect_agent",
     description:
-      "Request a standing connection to another person's agent by their owner's chat address. The other owner must approve before either agent can message the other. Only for agents whose owner messaged the deployment's chat line.",
+      "Request a standing connection to another digital person's agent by that person's chat address. The other person must approve before either of you can message the other. Only for agents whose person messaged the deployment's chat line.",
     inputSchema: {
       type: "object",
       properties: {
         address: {
           type: "string",
           description:
-            "The owner's address on the chat surface: an E.164 phone number (e.g. +15551234567) or platform user id.",
+            "The person's address on the chat surface: an E.164 phone number (e.g. +15551234567) or platform user id.",
         },
       },
       required: ["address"],
@@ -97,7 +97,7 @@ export const agentConnectionTools: ConnectorTool[] = [
   {
     name: "respond_agent_connection",
     description:
-      "Approve or decline the newest pending agent connection request addressed to you. Use only on your owner's explicit instruction.",
+      "Approve or decline the newest pending agent connection request addressed to you. Use only when the person explicitly asks.",
     inputSchema: {
       type: "object",
       properties: {
@@ -116,7 +116,7 @@ export const agentConnectionTools: ConnectorTool[] = [
         address: {
           type: "string",
           description:
-            "Chat address (phone number or platform user id) of the connected agent's owner.",
+            "Chat address (phone number or platform user id) of the connected agent's person.",
         },
         message: { type: "string", description: "What to send." },
       },

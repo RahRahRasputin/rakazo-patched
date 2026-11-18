@@ -474,7 +474,7 @@ EVAL_HELPERS = r"""
           : "A saved username can only be typed into a text, email, or telephone field, or chosen in a dropdown.");
       }
       if (code && !looksLikeCodeBox(input)) {
-        throw refused("This field doesn't look like a code box; ask the user to take over.");
+        throw refused("This field doesn't look like a code box; ask the person to take over.");
       }
       // A numeric box takes the digits of a code written with dashes.
       if (code && numericBox(input)) value = String(value).replaceAll("-", "");

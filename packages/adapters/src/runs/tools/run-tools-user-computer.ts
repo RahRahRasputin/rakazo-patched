@@ -37,11 +37,11 @@ export {
   userComputerAppName,
 };
 
-/** Whether the run's owner has their desktop connected, or could connect one. */
+/** Whether the person's desktop is connected, or could be. */
 export type UserComputerState = "connected" | "offline" | undefined;
 
 const USER_COMPUTER_UNAVAILABLE =
-  'The user\'s computer is not connected. If the task needs it, ask them to open the Rakazo desktop app and turn on "Let bots use this computer" in its settings.';
+  'The person\'s computer is not connected. If the task needs it, ask them to open the Rakazo desktop app and turn on "Let bots use this computer" in its settings.';
 
 /**
  * Whose own computer this run may reach: the person whose message started it, when they own the
@@ -130,7 +130,7 @@ export function userComputerCwd(environment: HostComputerEnvironment, cwd: unkno
   const resolved = paths.resolve(environment.home, expanded);
   const relative = paths.relative(environment.home, resolved);
   if (relative === ".." || relative.startsWith(`..${paths.sep}`) || paths.isAbsolute(relative))
-    throw new Error("cwd must be inside the user's home folder; cd elsewhere within the command");
+    throw new Error("cwd must be inside the person's home folder; cd elsewhere within the command");
   return resolved;
 }
 
@@ -198,7 +198,7 @@ export async function userComputerShell(ctx: RunContext, call: ToolCall) {
       error instanceof Error ? error.message : "command failed",
       ctx.secrets,
     );
-    return call.finish({ error: `The user's computer did not finish the command: ${reason}` });
+    return call.finish({ error: `The person's computer did not finish the command: ${reason}` });
   }
 }
 
@@ -233,7 +233,7 @@ type ScreenRequest =
 
 /** The device gets the app name the approval card showed, never the raw argument. */
 async function userComputerScreen(ctx: RunContext, call: ToolCall, request: ScreenRequest) {
-  if (!request.app) return call.finish({ error: "app must name an app on the user's computer." });
+  if (!request.app) return call.finish({ error: "app must name an app on the person's computer." });
   const connected = await connectedUserComputer(ctx);
   if (!connected) return call.finish({ error: USER_COMPUTER_UNAVAILABLE });
   const { owner, devices, deviceId } = connected;
@@ -265,7 +265,7 @@ async function userComputerScreen(ctx: RunContext, call: ToolCall, request: Scre
       error instanceof Error ? error.message : "screen control failed",
       ctx.secrets,
     );
-    return call.finish({ error: `The user's computer did not finish: ${reason}` });
+    return call.finish({ error: `The person's computer did not finish: ${reason}` });
   }
 }
 

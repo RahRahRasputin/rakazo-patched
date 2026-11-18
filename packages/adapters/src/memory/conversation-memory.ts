@@ -346,8 +346,8 @@ export async function retainRunConversation(
   const result = await provider.retainConversation(
     {
       botId: run.botId,
-      botName: bot.name || "the assistant",
-      userName: author?.name || "the user",
+      botName: bot.name || "this digital person",
+      userName: author?.name || "the person",
       scope: effectiveMemoryScope(bot.memoryScope, configured.defaultScope),
       threadId: run.threadId,
       conversation: thread.groupId ? "group" : "direct",

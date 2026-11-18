@@ -193,7 +193,7 @@ export function resolveVoiceChoice(
   return {
     ok: false,
     error: matches.length
-      ? `"${echoedQuery(query)}" matches several voices. Ask the user which one: ${named(matches)}.`
+      ? `"${echoedQuery(query)}" matches several voices. Ask the person which one: ${named(matches)}.`
       : `No voice matches "${echoedQuery(query)}". Voices: ${named(voices)}.`,
   };
 }

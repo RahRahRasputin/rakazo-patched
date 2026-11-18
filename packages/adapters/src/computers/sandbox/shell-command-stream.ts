@@ -42,7 +42,7 @@ function showsSignInPrompt(snapshot: ShellCommandSnapshot): boolean {
 }
 
 export const SHELL_STILL_RUNNING_NOTICE =
-  "Still running. Tell the user any one-time code or sign-in URL in the output.";
+  "Still running. Tell the person any one-time code or sign-in URL in the output.";
 
 export interface ShellCommandSnapshot {
   stdout: string;

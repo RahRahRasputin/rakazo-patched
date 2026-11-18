@@ -413,7 +413,7 @@ export function isApprovalPausedResult(result: unknown): result is ApprovalPause
 }
 
 export const DENIED_ACTION_ERROR =
-  "The user denied this action. Do not retry or rephrase it; tell the user and ask what they want instead.";
+  "The person declined this action. Do not retry or rephrase it; tell them and ask what they want instead.";
 
 export type DuplicateEffectGate =
   | { action: "execute" }

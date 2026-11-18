@@ -351,7 +351,7 @@ describe("resolveDuplicateEffectGate", () => {
       action: "return",
       result: {
         error:
-          "The user denied this action. Do not retry or rephrase it; tell the user and ask what they want instead.",
+          "The person declined this action. Do not retry or rephrase it; tell them and ask what they want instead.",
       },
     });
   });
