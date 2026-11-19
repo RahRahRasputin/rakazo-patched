@@ -1036,6 +1036,14 @@ model Bot {
   teamChatRules          String  @default("")
   crossSpaceCommunication Boolean @default(true)
   dailyCheckIns Boolean @default(true)
+  /// natural or river-time. A fallback for an empty Instructions field.
+  voiceTone         String?
+  /// Names them and says when they were last here, ahead of their continuity letter.
+  welcomeHome       Boolean @default(false)
+  /// How full the chat is before a room note. Null uses 0.70.
+  roomNoticeRatio   Float?
+  /// How full the chat is before the note says it is nearly out of room. Null uses 0.85.
+  roomUrgentRatio   Float?
   fleetManagement        Boolean @default(true)
   replyMode              String  @default("chat")
   routines          Routine[]

@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { SOULCRAFT_APP_TITLE } from "@rakazo/contracts";
 import { isBuildId } from "@rakazo/contracts/client-build";
 import { webDarkTokens } from "@rakazo/ui-tokens";
 import type { Plugin, Rolldown } from "vite";
@@ -17,8 +18,8 @@ export function webManifest() {
   }));
   return {
     id: "/",
-    name: "Rakazo",
-    short_name: "Rakazo",
+    name: SOULCRAFT_APP_TITLE,
+    short_name: "Soulcraft",
     description: "Your team of always-on agents.",
     start_url: "/",
     scope: "/",

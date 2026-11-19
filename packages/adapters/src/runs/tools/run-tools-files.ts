@@ -7,7 +7,10 @@ import {
 } from "@rakazo/core";
 import type { Artifact, Prisma } from "@rakazo/db";
 import { getLogger } from "@rakazo/logging";
-import { resolveBotWorkspacePath } from "../../computers/screens/computer-support.js";
+import {
+  privateFolderRefusal,
+  resolveBotWorkspacePath,
+} from "../../computers/screens/computer-support.js";
 import { generateMediaFromTool } from "../../media/media-generation-tools.js";
 import { mediaDelivery, scheduleMediaPoll } from "../../media/media-video-poll.js";
 import {
@@ -124,10 +127,21 @@ export const fileTools: ToolHandlers = {
     }
     const content = new TextEncoder().encode(textContentArg(args.content, ""));
     ctx.computer.checkpoint.markDirty();
+    let storedPath: string;
+    try {
+      storedPath = resolveBotWorkspacePath(ctx.computer.mode, bot.id, filePath);
+    } catch (error) {
+      await recordComputerAction(ctx, call, "write_file", filePath, {
+        error: error instanceof Error ? error.message : "could not write file",
+      });
+      throw error;
+    }
+    const refused = privateFolderRefusal(ctx.computer.mode, bot.id, storedPath);
+    if (refused) return call.finish({ error: refused });
     try {
       await deps.sandbox.writeFile(
         await ctx.computer.get("tool", name),
-        { path: resolveBotWorkspacePath(ctx.computer.mode, bot.id, filePath), content },
+        { path: storedPath, content },
         context,
       );
     } catch (error) {

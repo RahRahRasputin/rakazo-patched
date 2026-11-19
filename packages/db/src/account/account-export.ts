@@ -166,6 +166,11 @@ async function* spaceRecords(
       teamChatRules: bot.teamChatRules,
       crossSpaceCommunication: bot.crossSpaceCommunication,
       dailyCheckIns: bot.dailyCheckIns,
+      voiceTone:
+        bot.voiceTone === "natural" || bot.voiceTone === "river-time" ? bot.voiceTone : null,
+      welcomeHome: bot.welcomeHome,
+      roomNoticeRatio: bot.roomNoticeRatio,
+      roomUrgentRatio: bot.roomUrgentRatio,
       fleetManagement: bot.fleetManagement,
       replyMode: bot.replyMode === "messages" ? "messages" : "chat",
       createdAt: iso(bot.createdAt),

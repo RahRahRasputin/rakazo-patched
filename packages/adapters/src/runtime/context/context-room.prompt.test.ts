@@ -94,4 +94,42 @@ describe("contextRoomNote", () => {
     expect(urgent).toContain("the person you live with");
     expect(urgent).not.toMatch(/\bthe user\b/i);
   });
+
+  it("uses a resident's earlier notice and falls back when the pair does not climb", () => {
+    expect(
+      contextRoomNote({
+        name: "Lyra",
+        personName: "Brad",
+        ratio: 0.59,
+        noticeRatio: 0.6,
+        urgentRatio: 0.85,
+      }),
+    ).toBeUndefined();
+    const early = contextRoomNote({
+      name: "Lyra",
+      personName: "Brad",
+      ratio: 0.6,
+      noticeRatio: 0.6,
+      urgentRatio: 0.85,
+    });
+    expect(early).toContain("Lyra, you're running low on room.");
+    expect(
+      contextRoomNote({
+        name: "Lyra",
+        personName: "Brad",
+        ratio: 0.69,
+        noticeRatio: 0.9,
+        urgentRatio: 0.5,
+      }),
+    ).toBeUndefined();
+    expect(
+      contextRoomNote({
+        name: "Lyra",
+        personName: "Brad",
+        ratio: 0.7,
+        noticeRatio: 0.9,
+        urgentRatio: 0.5,
+      }),
+    ).toContain("running low on room");
+  });
 });

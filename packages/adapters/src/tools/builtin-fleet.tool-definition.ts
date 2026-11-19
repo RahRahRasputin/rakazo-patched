@@ -250,6 +250,24 @@ export const fleetTools: ConnectorTool[] = [
           type: "string",
           description: 'Voice to read replies in: a voice name, or "default".',
         },
+        voiceTone: {
+          type: "string",
+          enum: ["natural", "river-time"],
+          description: "Fallback voice when instructions are empty: natural or river-time.",
+        },
+        welcomeHome: {
+          type: "boolean",
+          description: "Greet by name with the last session, ahead of the continuity letter.",
+        },
+        roomNoticeRatio: {
+          type: "number",
+          description: "How full the chat is before a room note. Unset is 0.70.",
+        },
+        roomUrgentRatio: {
+          type: "number",
+          description:
+            "How full before the note says the chat is nearly out of room. Unset is 0.85.",
+        },
         bot_id: {
           type: "string",
           description: "A bot in this space, to update its profile instead of yours.",

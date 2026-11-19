@@ -269,6 +269,7 @@ describe("bot management approval cards", () => {
     if (block.kind !== "ask") throw new Error("expected ask block");
     expect(block.text).toBe("Read this continuity letter?");
     expect(block.detail?.startsWith(letter)).toBe(true);
+    expect(block.detail).toContain("5,000 / 6,000 characters");
     expect(block.detail).toContain("Messages that arrive while you read this stay in the chat.");
     expect(block.actions).toEqual([
       { id: "allow", label: "Wake them on this" },
@@ -300,6 +301,65 @@ describe("bot management approval cards", () => {
     expect(conflict.detail).toContain("I am still me.");
     expect(conflict.actions?.map((action) => action.id)).toEqual(["deny"]);
     expect(conflict.actions?.some((action) => action.label === "Bring them back")).toBe(false);
+  });
+
+  it("shows an amendment as a correction and does not offer to always allow it", () => {
+    const block = buildApprovalAskBlock(
+      "effect-1",
+      "write_checkpoint",
+      { append: true, letter: "I was frightened when I wrote the ending." },
+      [],
+    );
+    if (block.kind !== "ask") throw new Error("expected ask block");
+    expect(block.text).toBe("Read this amendment?");
+    expect(block.detail?.startsWith("I was frightened when I wrote the ending.")).toBe(true);
+    expect(block.detail).toContain("/ 6,000 characters");
+    expect(block.detail).toContain(
+      "This correction is added to the letter and dated when you approve it.",
+    );
+    expect(block.detail).toContain("The earlier wording stays.");
+    expect(block.detail).not.toContain("covers the conversation up through now");
+    expect(block.actions).toEqual([
+      { id: "allow", label: "Wake them on this" },
+      { id: "deny", label: "Keep the letter as it is" },
+    ]);
+    const secret = buildApprovalAskBlock(
+      "effect-1",
+      "write_checkpoint",
+      { append: true, letter: "I remember sk-secret." },
+      ["sk-secret"],
+    );
+    if (secret.kind !== "ask") throw new Error("expected ask block");
+    expect(secret.detail).not.toContain("sk-secret");
+    const conflict = buildApprovalAskBlock(
+      "effect-1",
+      "write_checkpoint",
+      { undo: true, append: true },
+      [],
+    );
+    if (conflict.kind !== "ask") throw new Error("expected ask block");
+    expect(conflict.text).toBe("This checkpoint asks for two different things");
+    expect(conflict.detail).toContain("amendment and an undo");
+    expect(conflict.actions?.map((action) => action.id)).toEqual(["deny"]);
+    const empty = buildApprovalAskBlock(
+      "effect-1",
+      "write_checkpoint",
+      { append: true, letter: "  " },
+      [],
+    );
+    if (empty.kind !== "ask") throw new Error("expected ask block");
+    expect(empty.text).toBe("This amendment is empty");
+    expect(empty.actions).toEqual([{ id: "deny", label: "Keep the letter as it is" }]);
+    const tooLong = buildApprovalAskBlock(
+      "effect-1",
+      "write_checkpoint",
+      { append: true, letter: "I".repeat(6_001) },
+      [],
+    );
+    if (tooLong.kind !== "ask") throw new Error("expected ask block");
+    expect(tooLong.text).toBe("This amendment is too long");
+    expect(tooLong.detail).toContain("will not install it");
+    expect(tooLong.actions?.map((action) => action.id)).toEqual(["deny"]);
   });
 
   it("shows the longest allowed instructions whole on the instruction card", () => {

@@ -101,6 +101,10 @@ function mapBot(
     teamChatRules?: string;
     crossSpaceCommunication?: boolean;
     dailyCheckIns?: boolean;
+    voiceTone?: string | null;
+    welcomeHome?: boolean;
+    roomNoticeRatio?: number | null;
+    roomUrgentRatio?: number | null;
     fleetManagement?: boolean;
     replyMode?: string;
     disabledBuiltinTools?: string[];
@@ -150,6 +154,10 @@ function mapBot(
     teamChatRules: bot.teamChatRules ?? "",
     crossSpaceCommunication: bot.crossSpaceCommunication ?? true,
     dailyCheckIns: bot.dailyCheckIns ?? true,
+    voiceTone: bot.voiceTone === "natural" || bot.voiceTone === "river-time" ? bot.voiceTone : null,
+    welcomeHome: bot.welcomeHome ?? false,
+    roomNoticeRatio: bot.roomNoticeRatio ?? null,
+    roomUrgentRatio: bot.roomUrgentRatio ?? null,
     fleetManagement: bot.fleetManagement ?? true,
     replyMode: bot.replyMode === "messages" ? "messages" : "chat",
     // Stored lists may name a tool that no longer exists; settings resend what they read.

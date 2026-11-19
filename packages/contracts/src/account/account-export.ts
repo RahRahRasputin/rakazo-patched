@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { PageSourceSchema, PageTitleSchema } from "../artifacts/pages.js";
-import { BotSchema } from "../bots/bot.js";
+import { BotSchema, VoiceToneSchema } from "../bots/bot.js";
 import { BotAvatarSetSchema } from "../bots/bot-avatar.js";
 import { Id, IsoDate, ReplyModeSchema } from "../ids.js";
 import { RoutineSchema } from "../routines/routine.js";
@@ -85,6 +85,10 @@ export const AccountExportRecordSchema = z.discriminatedUnion("type", [
     teamChatRules: z.string(),
     crossSpaceCommunication: z.boolean(),
     dailyCheckIns: z.boolean().default(true),
+    voiceTone: VoiceToneSchema.nullable().optional(),
+    welcomeHome: z.boolean().default(false),
+    roomNoticeRatio: z.number().nullable().optional(),
+    roomUrgentRatio: z.number().nullable().optional(),
     fleetManagement: z.boolean(),
     replyMode: ReplyModeSchema.default("chat"),
     createdAt: IsoDate,

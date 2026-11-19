@@ -9,6 +9,7 @@ import { getLogger } from "@rakazo/logging";
 import { JSDOM } from "jsdom";
 import {
   displayBotWorkspacePath,
+  privateFolderRefusal,
   resolveBotWorkspacePath,
   teamBotWorkspaceDirectory,
 } from "../computers/screens/computer-support.js";
@@ -173,22 +174,35 @@ export async function listFilesFromTool(
 ) {
   const { botId, computerMode, computer, context, runSecrets } = workspace;
   const requestedPath = String(args.path ?? "");
-  const entries = await sandbox.listFiles(
-    await computer(),
-    resolveBotWorkspacePath(computerMode, botId, requestedPath),
-    context,
-  );
+  const storedDir = resolveBotWorkspacePath(computerMode, botId, requestedPath);
+  const refused = privateFolderRefusal(computerMode, botId, storedDir);
+  if (refused) return { error: refused };
+  const entries = await sandbox.listFiles(await computer(), storedDir, context);
   return {
     path: requestedPath,
-    entries: entries.map((entry) => ({
-      ...entry,
-      // A file name can carry a value an earlier command or page wrote.
-      path: redactSecrets(
-        displayBotWorkspacePath(computerMode, botId, requestedPath, entry.path),
-        runSecrets,
-      ),
-    })),
+    entries: entries.flatMap((entry) => {
+      const stored = listedStoredPath(storedDir, entry.path);
+      if (privateFolderRefusal(computerMode, botId, stored)) return [];
+      return [
+        {
+          ...entry,
+          // A file name can carry a value an earlier command or page wrote.
+          path: redactSecrets(
+            displayBotWorkspacePath(computerMode, botId, requestedPath, entry.path),
+            runSecrets,
+          ),
+        },
+      ];
+    }),
   };
+}
+
+/** Listings name files from the workspace root. A bare name is still under the directory asked for. */
+function listedStoredPath(directory: string, entryPath: string): string {
+  const entry = entryPath.replace(/\\/g, "/").replace(/^\/+/, "");
+  const dir = directory.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  if (!dir || entry === dir || entry.startsWith(`${dir}/`)) return entry;
+  return `${dir}/${entry}`;
 }
 
 export async function readFileFromTool(
@@ -200,6 +214,8 @@ export async function readFileFromTool(
   const { botId, computerMode, computer, context, runSecrets } = workspace;
   const filePath = String(args.path ?? "");
   const storedPath = resolveBotWorkspacePath(computerMode, botId, filePath);
+  const refused = privateFolderRefusal(computerMode, botId, storedPath);
+  if (refused) return { error: refused, path: filePath };
   let bytes: Uint8Array;
   try {
     bytes =
@@ -269,12 +285,12 @@ export async function renderPlotFromTool(
     const dataPath =
       typeof args.data_path === "string" && args.data_path ? args.data_path : undefined;
     if (!rows && dataPath) {
-      const bytes = await deps.sandbox.readFile(
-        await computer(),
-        resolveBotWorkspacePath(computerMode, botId, dataPath),
-        context,
-        { maxBytes: deps.maxUploadSizeBytes ?? ATTACHMENT_MAX_BYTES },
-      );
+      const storedData = resolveBotWorkspacePath(computerMode, botId, dataPath);
+      const dataRefusal = privateFolderRefusal(computerMode, botId, storedData);
+      if (dataRefusal) return { error: dataRefusal };
+      const bytes = await deps.sandbox.readFile(await computer(), storedData, context, {
+        maxBytes: deps.maxUploadSizeBytes ?? ATTACHMENT_MAX_BYTES,
+      });
       checkingSpec = true;
       rows = parsePlotData(dataPath, new TextDecoder().decode(bytes));
     }
@@ -285,11 +301,14 @@ export async function renderPlotFromTool(
     const png = await plotSvgToPng(svg);
     const outPath =
       typeof args.path === "string" && args.path ? args.path : `charts/plot-${Date.now()}.png`;
+    const storedOut = resolveBotWorkspacePath(computerMode, botId, outPath);
+    const outRefusal = privateFolderRefusal(computerMode, botId, storedOut);
+    if (outRefusal) return { error: outRefusal };
     workspace.markDirty();
     await deps.sandbox.writeFile(
       await computer(),
       {
-        path: resolveBotWorkspacePath(computerMode, botId, outPath),
+        path: storedOut,
         content: png,
       },
       context,

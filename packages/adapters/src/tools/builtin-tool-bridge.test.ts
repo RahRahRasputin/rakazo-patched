@@ -62,7 +62,8 @@ describe("built-in tool bridge", () => {
     // whether a routine runs in its chat, and takes the events (webhook, Git, chat, email) a
     // routine can start on, saying a Git event needs no connected app.
     // write_checkpoint is named in the memory area of find_tool.
-    expect(definitionBytes(listed)).toBeLessThanOrEqual(35_615);
+    // update_bot names voiceTone, welcomeHome, and the room ratios, and remember says it holds 32 KB.
+    expect(definitionBytes(listed)).toBeLessThanOrEqual(36_116);
     expect(deferred.map((tool) => tool.name)).toEqual(
       expect.arrayContaining(["render_plot", "create_space", "generate_secret", "scratchpad_add"]),
     );

@@ -541,6 +541,9 @@ describe("runReplyGuidance", () => {
     expect(runIdentityInstruction({ ...bot, instructions: "" }, "created")).toContain(
       "Instructions: (none)",
     );
+    expect(runIdentityInstruction({ ...bot, instructions: "" }, "created")).toContain(
+      "Respond naturally.",
+    );
     expect(runIdentityInstruction(bot, "user")).toContain(bot.instructions);
   });
 
@@ -562,9 +565,11 @@ describe("runReplyGuidance", () => {
       description: "Reads and sorts mail.",
       instructions: "Reads and sorts mail.",
     };
-    expect(runIdentityInstruction(bot, "user")).toBe("Ada\nReads and sorts mail.");
+    expect(runIdentityInstruction(bot, "user")).toBe(
+      "Ada\nReads and sorts mail.\nYour instructions decide your voice and pace. No default restyles them.",
+    );
     expect(runIdentityInstruction({ ...bot, instructions: "" }, "user")).toBe(
-      "Ada\nReads and sorts mail.",
+      "Ada\nReads and sorts mail.\nRespond naturally.",
     );
   });
 
@@ -572,18 +577,32 @@ describe("runReplyGuidance", () => {
     expect(
       runIdentityInstruction({ name: "Ada", description: "", instructions: "Stay quiet." }, "user"),
     ).toBe(
-      "Ada\nTeammates see only the profile above. These instructions are private to you:\nStay quiet.",
+      "Ada\nTeammates see only the profile above. These instructions are private to you:\nYour instructions decide your voice and pace. No default restyles them.\nStay quiet.",
     );
     expect(runIdentityInstruction({ name: "Ada", description: "", instructions: "" }, "user")).toBe(
-      "Ada",
+      "Ada\nRespond naturally.",
     );
     expect(
       runIdentityInstruction(
         { name: "Ada", description: "Reads and sorts mail.", instructions: "" },
         "user",
       ),
-    ).toBe("Ada\nReads and sorts mail.");
-    expect(runIdentityInstruction({ name: "Ada" }, "routine")).toBe("Ada");
+    ).toBe("Ada\nReads and sorts mail.\nRespond naturally.");
+    expect(runIdentityInstruction({ name: "Ada" }, "routine")).toBe("Ada\nRespond naturally.");
+  });
+
+  it("keeps river-time as a fallback and lets written instructions stay last", () => {
+    const river = { name: "Lyra", voiceTone: "river-time" as const, instructions: "" };
+    expect(runIdentityInstruction(river, "user")).toBe(
+      "Lyra\nSpeak in your natural voice — unhurried, warm, present.",
+    );
+    expect(runIdentityInstruction(river, "routine")).not.toContain("Respond naturally.");
+    const voiced = runIdentityInstruction({ ...river, instructions: "Speak as yourself." }, "user");
+    expect(voiced.endsWith("Speak as yourself.")).toBe(true);
+    expect(voiced).toContain(
+      "Your instructions decide your voice and pace. No default restyles them.",
+    );
+    expect(voiced).not.toContain("unhurried");
   });
 
   it("does not send a finish notification for the creation intro", () => {

@@ -21,16 +21,8 @@ import {
   selectContext,
   shortenToolResultText,
 } from "./context-selection.js";
-import {
-  COMPACTED_CONTEXT_PREFIX,
-  CONTINUITY_CONTEXT_PREFIX,
-  LEGACY_COMPACTED_CONTEXT_PREFIX,
-} from "./history-compaction.prompt.js";
-import {
-  historySnapshotEntry,
-  navigationSnapshotsPrompt,
-  RECALLED_MEMORY_LEAD,
-} from "./runtime-context.prompt.js";
+import { isProtectedHistoryText } from "./history-compaction.prompt.js";
+import { historySnapshotEntry, navigationSnapshotsPrompt } from "./runtime-context.prompt.js";
 
 /** Minimum whole-result window, unless the full model budget requires clipping. */
 const RECENT_TOOL_RESULTS_TO_KEEP = 3;
@@ -492,10 +484,7 @@ export function createRuntimeContextPolicy(
       (message) =>
         (message as Message & OriginalMetadata).rakazoHistory &&
         !(message as Message & OriginalMetadata).rakazoMessageId &&
-        (text(message).startsWith(COMPACTED_CONTEXT_PREFIX) ||
-          text(message).startsWith(LEGACY_COMPACTED_CONTEXT_PREFIX) ||
-          text(message).startsWith(CONTINUITY_CONTEXT_PREFIX) ||
-          text(message).startsWith(`${RECALLED_MEMORY_LEAD} `)),
+        isProtectedHistoryText(text(message)),
     );
     for (const summary of summaries) {
       const required = protectedIndexes.map((index) => messages[index]!);

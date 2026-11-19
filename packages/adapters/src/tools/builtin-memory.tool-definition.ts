@@ -256,14 +256,20 @@ export const memoryTools: ConnectorTool[] = [
   {
     name: "write_checkpoint",
     description:
-      "Write a continuity letter in your own voice (I, me, my) when you want to make room in this chat. After the person reads it and approves, the active window is replaced by your letter. It does not delete messages; search_history can still read them. The letter replaces any earlier summary rather than stacking on it. Pass undo true, with no letter, to take the letter out of the active chat after the same approval. The recent messages come back into view; search_history can still read the rest. Do not pass a letter and undo together. Do not call this unless you choose to or the person asks.",
+      "Write a continuity letter in your own voice (I, me, my) when you want to make room in this chat. After the person reads it and approves, the active window is replaced by your letter. It does not delete messages; search_history can still read them. Without append, the letter replaces any earlier summary rather than stacking on it. Pass append true, with the correction in letter, to add a dated correction beside the current letter. The earlier wording stays, and the chat after the letter stays in view. Pass undo true, with no letter and no append, to take the letter out of the active chat after the same approval. The recent messages come back into view; search_history can still read the rest. Do not pass append together with undo, or a letter and undo together. Do not call this unless you choose to or the person asks.",
     inputSchema: {
       type: "object",
       properties: {
         letter: {
           type: "string",
           maxLength: CONTINUITY_LETTER_MAX,
-          description: "The letter to yourself, first person. Omit it when undo is true.",
+          description:
+            "The letter to yourself, first person. With append, this is the correction and the earlier letter stays. Omit it when undo is true.",
+        },
+        append: {
+          type: "boolean",
+          description:
+            "Add this letter as a dated correction to the current continuity letter. The earlier wording stays. Do not pass it with undo.",
         },
         undo: {
           type: "boolean",

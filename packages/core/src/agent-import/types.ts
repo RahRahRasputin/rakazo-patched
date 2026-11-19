@@ -22,11 +22,13 @@ export type AgentImportParse = Omit<
 const SKILL_CONTENT_MAX_LENGTH = 100_000;
 const SKILL_FILE = /^(?:\.agents\/)?skills\/(?:[^/]+\/){1,4}SKILL\.md$/;
 
-/** Folders that hold sessions, logs, schedules or credentials. Never read. */
-const PRIVATE_FOLDERS = new Set(["sessions", "logs", "cron", "credentials"]);
+/** Folders that hold sessions, logs, schedules, credentials, or a resident's own room. Never read. */
+const PRIVATE_FOLDERS = new Set(["sessions", "logs", "cron", "credentials", "PrivateFolder"]);
 
 export function isPrivatePath(path: string): boolean {
-  return PRIVATE_FOLDERS.has(path.split("/")[0] ?? "");
+  const segments = path.split("/");
+  if (PRIVATE_FOLDERS.has(segments[0] ?? "")) return true;
+  return segments.includes("PrivateFolder");
 }
 
 export function isSkillPath(path: string): boolean {

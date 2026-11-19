@@ -205,4 +205,73 @@ function stripVirtualWorkspaceRoot(value: string): string | null {
   return portable.startsWith("/") ? portable.slice(1) : null;
 }
 
+/** A resident's own room on a shared computer. The name is case-sensitive. */
+export const PRIVATE_FOLDER_NAME = "PrivateFolder";
+
+export const PRIVATE_FOLDER_REFUSAL =
+  "PrivateFolder is that resident's own room. Other residents' tools do not read it, and it is not part of the shared computer.";
+
+export const PRIVATE_FOLDER_SHARE_REFUSAL =
+  "PrivateFolder stays on your computer. Nothing was sent.";
+
+/**
+ * On a team computer, PrivateFolder is readable only under the acting resident's home.
+ * A dedicated computer is that resident's home, so the folder is theirs. This is a dignity
+ * boundary for ordinary paths, not a lock against a shell that never names the folder.
+ */
+export function privateFolderRefusal(
+  scope: ComputerMode,
+  actorBotId: string,
+  storedPath: string,
+): string | undefined {
+  let normalized: string;
+  try {
+    normalized = normalizeWorkspacePath(storedPath);
+  } catch {
+    return undefined;
+  }
+  const segments = normalized.split("/").filter(Boolean);
+  const index = segments.indexOf(PRIVATE_FOLDER_NAME);
+  if (index < 0 || scope !== "team") return undefined;
+  const parent = segments.slice(0, index).join("/");
+  if (privateFolderParentAllowed(parent, actorBotId)) return undefined;
+  return PRIVATE_FOLDER_REFUSAL;
+}
+
+function privateFolderParentAllowed(parent: string, actorBotId: string): boolean {
+  const own = teamBotWorkspaceDirectory(actorBotId);
+  if (parent === own || parent.startsWith(`${own}/`)) return true;
+  // An absolute shell cwd keeps a host prefix in front of the bot home.
+  return parent.endsWith(`/${own}`) || parent.includes(`/${own}/`);
+}
+
+/**
+ * Relative names are the resident's own home. A command that reaches shared/ or another
+ * bot's PrivateFolder is refused. A command that never writes the folder's name is not
+ * inspected: obfuscation is outside this boundary.
+ */
+export function shellPrivateFolderRefusal(
+  scope: ComputerMode,
+  actorBotId: string,
+  command: string,
+  cwd?: string,
+): string | undefined {
+  if (scope !== "team") return undefined;
+  if (cwd) {
+    const cwdRefusal = privateFolderRefusal(scope, actorBotId, cwd);
+    if (cwdRefusal) return cwdRefusal;
+  }
+  if (!command.includes(PRIVATE_FOLDER_NAME)) return undefined;
+  const ownId = teamBotWorkspaceDirectory(actorBotId).split("/").pop();
+  const pattern = new RegExp(
+    `(?:shared|bots\\/([^/\\s"'\`]+))\\/(?:[^/\\s"'\`]+\\/)*${PRIVATE_FOLDER_NAME}`,
+    "g",
+  );
+  for (const match of command.matchAll(pattern)) {
+    const named = match[1];
+    if (named === undefined || named !== ownId) return PRIVATE_FOLDER_REFUSAL;
+  }
+  return undefined;
+}
+
 export { shellQuote } from "@rakazo/core/node/desktop-runtime";

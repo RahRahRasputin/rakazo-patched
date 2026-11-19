@@ -17,6 +17,8 @@ import { findPostableGroup, postToGroup } from "../../bots/group-post.js";
 import { endCallFromTool, requestUserCall } from "../../calls/call-request.js";
 import {
   normalizeWorkspacePath,
+  PRIVATE_FOLDER_NAME,
+  PRIVATE_FOLDER_SHARE_REFUSAL,
   resolveBotWorkspacePath,
 } from "../../computers/screens/computer-support.js";
 import { messageBot } from "../../messaging/bot-messages.js";
@@ -163,6 +165,9 @@ async function sharedFiles(
       stored = normalizeWorkspacePath(resolveBotWorkspacePath(ctx.computer.mode, ctx.bot.id, path));
     } catch {
       return { error: `${path}: path is outside the computer. Nothing was sent.` };
+    }
+    if (stored.split("/").includes(PRIVATE_FOLDER_NAME)) {
+      return { error: PRIVATE_FOLDER_SHARE_REFUSAL };
     }
     const parent = posix.dirname(stored);
     // A folder that does not exist fails to list on real computers too, so a listing error

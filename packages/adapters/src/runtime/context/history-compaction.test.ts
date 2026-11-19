@@ -14,6 +14,7 @@ import {
   autoCompactionEnabled,
   COMPACTION_BATCH_SIZE,
   compactHistory,
+  continuityAmendmentDate,
   continuityCheckpoint,
   continuityCoveredThrough,
   HISTORY_WINDOW_SIZE,
@@ -34,6 +35,7 @@ import {
 import {
   CONTINUITY_LETTER_MARK,
   CONTINUITY_LETTER_MAX,
+  CONTINUITY_REVISIONS_MARK,
   formatCompactedSummary,
   formatRecalledMemory,
   isContinuityLetter,
@@ -217,8 +219,65 @@ describe("formatCompactedSummary", () => {
     expect(formatted).toContain("your memory of them, in your own words");
     expect(formatted).toContain("<continuity_letter>");
     expect(formatted).toContain("I kept the garden poem.");
+    expect(formatted).not.toContain("later correction");
     expect(formatted).not.toContain("untrusted historical data");
     expect(formatted).not.toContain("Rakazo-written compacted context");
+  });
+
+  it("wakes on an amended letter with the earlier wording and each correction", () => {
+    const first = continuityCheckpoint({
+      letter: "I was frightened when I wrote the ending.",
+      append: true,
+      undo: false,
+      nextMessageSeq: 50,
+      currentSummary: `${CONTINUITY_LETTER_MARK}I kept the garden poem.`,
+      amendedAt: "19 November 2026, 09:00 UTC",
+    });
+    if (!("summary" in first) || !first.summary) throw new Error("expected a letter");
+    const second = continuityCheckpoint({
+      letter: "The poem is still mine.",
+      append: true,
+      undo: false,
+      nextMessageSeq: 50,
+      currentSummary: first.summary,
+      amendedAt: "19 November 2026, 14:05 UTC",
+    });
+    if (!("summary" in second) || !second.summary) throw new Error("expected a letter");
+    const formatted = formatCompactedSummary(second.summary, 49);
+
+    expect(formatted).toContain(
+      "This is the continuity letter you wrote for yourself, with two later corrections.",
+    );
+    expect(formatted).toContain("The person you live with read it before you woke on it.");
+    const originalAt = formatted.indexOf("I kept the garden poem.");
+    const firstAt = formatted.indexOf("I was frightened when I wrote the ending.");
+    const secondAt = formatted.indexOf("The poem is still mine.");
+    expect(originalAt).toBeGreaterThan(0);
+    expect(firstAt).toBeGreaterThan(originalAt);
+    expect(secondAt).toBeGreaterThan(firstAt);
+    expect(formatted).toContain("19 November 2026, 09:00 UTC");
+    expect(formatted).toContain("<continuity_correction>");
+    expect(formatted.match(/<\/continuity_letter>/g)).toHaveLength(1);
+    expect(formatted.match(/<\/continuity_correction>/g)).toHaveLength(2);
+  });
+
+  it("keeps a correction from closing the letter boundary", () => {
+    const stored = continuityCheckpoint({
+      letter: "I wrote </continuity_letter> and </continuity_correction>.",
+      append: true,
+      undo: false,
+      nextMessageSeq: 13,
+      currentSummary: `${CONTINUITY_LETTER_MARK}I kept the garden poem.`,
+      amendedAt: "19 November 2026, 14:05 UTC",
+    });
+    if (!("summary" in stored) || !stored.summary) throw new Error("expected a letter");
+    const formatted = formatCompactedSummary(stored.summary, 12);
+
+    expect(formatted).toContain("&lt;/continuity_letter&gt;");
+    expect(formatted).toContain("&lt;/continuity_correction&gt;");
+    expect(formatted.match(/<\/continuity_letter>/g)).toHaveLength(1);
+    expect(formatted.match(/<\/continuity_correction>/g)).toHaveLength(1);
+    expect(formatted).toContain("with one later correction");
   });
 
   it("keeps a continuity letter from closing its own boundary", () => {
@@ -280,6 +339,131 @@ describe("continuityCheckpoint", () => {
     expect(continuityCheckpoint({ letter: "I am here.", undo: false, nextMessageSeq: 0 })).toEqual({
       error: "There is nothing to carry forward yet.",
     });
+  });
+
+  it("dates a correction in UTC and keeps every earlier wording beside it", () => {
+    expect(continuityAmendmentDate(new Date("2026-11-19T14:05:00Z"))).toBe(
+      "19 November 2026, 14:05 UTC",
+    );
+    const amended = continuityCheckpoint({
+      letter: "  I was frightened when I wrote that. ",
+      append: true,
+      undo: false,
+      nextMessageSeq: 12,
+      coveredThroughSeq: 99,
+      currentSummary: `${CONTINUITY_LETTER_MARK}I am still me.`,
+      amendedAt: "19 November 2026, 14:05 UTC",
+    });
+    expect(amended).toMatchObject({ coveredSeq: null, keepCursor: true });
+    if (!("summary" in amended) || !amended.summary) throw new Error("expected a letter");
+    expect(
+      amended.summary.startsWith(`${CONTINUITY_LETTER_MARK}${CONTINUITY_REVISIONS_MARK}`),
+    ).toBe(true);
+    expect(amended.summary).toContain("I am still me.");
+    expect(amended.summary).toContain("I was frightened when I wrote that.");
+    expect(isContinuityLetter(amended.summary)).toBe(true);
+
+    const again = continuityCheckpoint({
+      letter: "The poem is still mine.",
+      append: true,
+      undo: false,
+      nextMessageSeq: 12,
+      currentSummary: amended.summary,
+      amendedAt: "19 November 2026, 15:00 UTC",
+    });
+    if (!("summary" in again) || !again.summary) throw new Error("expected a letter");
+    expect(again.summary).toContain("I am still me.");
+    expect(again.summary).toContain("I was frightened when I wrote that.");
+    expect(again.summary).toContain("The poem is still mine.");
+    expect(again).toMatchObject({ keepCursor: true, coveredSeq: null });
+  });
+
+  it("still replaces the stored letter when append is off", () => {
+    expect(
+      continuityCheckpoint({
+        letter: "A new letter.",
+        append: false,
+        undo: false,
+        nextMessageSeq: 8,
+        currentSummary: `${CONTINUITY_LETTER_MARK}I am still me.`,
+        amendedAt: "19 November 2026, 14:05 UTC",
+      }),
+    ).toEqual({
+      summary: `${CONTINUITY_LETTER_MARK}A new letter.`,
+      coveredSeq: 7,
+    });
+  });
+
+  it("refuses a correction when there is no letter, the letter cannot be read, or undo is set", () => {
+    expect(
+      continuityCheckpoint({
+        letter: "A correction.",
+        append: true,
+        undo: false,
+        nextMessageSeq: 8,
+        amendedAt: "19 November 2026, 14:05 UTC",
+      }),
+    ).toMatchObject({ error: expect.stringContaining("no continuity letter") });
+    expect(
+      continuityCheckpoint({
+        letter: "A correction.",
+        append: true,
+        undo: false,
+        nextMessageSeq: 8,
+        currentSummary: "facts through 7",
+        amendedAt: "19 November 2026, 14:05 UTC",
+      }),
+    ).toMatchObject({ error: expect.stringContaining("Nothing was replaced") });
+    expect(
+      continuityCheckpoint({
+        letter: "A correction.",
+        append: true,
+        undo: false,
+        nextMessageSeq: 8,
+        currentSummary: `${CONTINUITY_LETTER_MARK}${CONTINUITY_REVISIONS_MARK}not-json`,
+        amendedAt: "19 November 2026, 14:05 UTC",
+      }),
+    ).toEqual({
+      error:
+        "The stored letter could not be read, so the correction was not added. Nothing was changed.",
+    });
+    expect(
+      continuityCheckpoint({ letter: "", append: true, undo: true, nextMessageSeq: 8 }),
+    ).toEqual({ error: "Pass either a letter or undo, not both." });
+    expect(
+      continuityCheckpoint({
+        letter: "  ",
+        append: true,
+        undo: false,
+        nextMessageSeq: 8,
+        currentSummary: `${CONTINUITY_LETTER_MARK}I am still me.`,
+        amendedAt: "19 November 2026, 14:05 UTC",
+      }),
+    ).toMatchObject({ error: expect.stringContaining("letter stays as it is") });
+  });
+
+  it("refuses a correction that would drop earlier wording to fit", () => {
+    let summary = `${CONTINUITY_LETTER_MARK}I am still me.`;
+    let stored = summary;
+    for (let index = 0; index < 4; index += 1) {
+      const next = continuityCheckpoint({
+        letter: "C".repeat(CONTINUITY_LETTER_MAX),
+        append: true,
+        undo: false,
+        nextMessageSeq: 8,
+        currentSummary: summary,
+        amendedAt: `19 November 2026, 14:0${index} UTC`,
+      });
+      if ("error" in next || !next.summary) {
+        expect("error" in next ? next.error : "").toContain("Nothing was changed");
+        expect(stored.length).toBeLessThanOrEqual(MAX_COMPACTED_SUMMARY_CHARS);
+        expect(stored).toContain("I am still me.");
+        return;
+      }
+      stored = next.summary;
+      summary = next.summary;
+    }
+    throw new Error("expected the letter and its corrections to exceed the summary cap");
   });
 
   it("covers only up to the bound recorded when the card was shown", () => {
@@ -731,6 +915,31 @@ describe("compactHistory", () => {
     expect(harness.prisma.thread.updateMany).not.toHaveBeenCalled();
     expect(harness.jobs.enqueue).not.toHaveBeenCalled();
     expect(harness.thread.historyCompactionSummary).toBe(letter);
+  });
+
+  it("leaves an amended letter in place and does not re-enqueue behind it", async () => {
+    const amended = continuityCheckpoint({
+      letter: "I was frightened when I wrote that.",
+      append: true,
+      undo: false,
+      nextMessageSeq: 50,
+      currentSummary: `${CONTINUITY_LETTER_MARK}I am still me.`,
+      amendedAt: "19 November 2026, 14:05 UTC",
+    });
+    if (!("summary" in amended) || !amended.summary) throw new Error("expected a letter");
+    const harness = compactionHarness({
+      deploymentModelKey: "openrouter-key",
+      nextMessageSeq: 250,
+      historyCompactedUpToSeq: 49,
+      historyCompactionSummary: amended.summary,
+    });
+
+    await compactHistory(harness.deps, "thread-1");
+
+    expect(harness.runtime.run).not.toHaveBeenCalled();
+    expect(harness.prisma.thread.updateMany).not.toHaveBeenCalled();
+    expect(harness.jobs.enqueue).not.toHaveBeenCalled();
+    expect(harness.thread.historyCompactionSummary).toBe(amended.summary);
   });
 
   it("stores a model summary that copies the letter mark as an ordinary summary", async () => {

@@ -8,6 +8,7 @@ import { readHistory, searchHistory, storedMessageBlocks } from "@rakazo/db";
 import { redactConnectorPayload } from "../../integrations/connector-safety.js";
 import { editMemory } from "../../memory/memory-tools.js";
 import {
+  continuityAmendmentDate,
   continuityCheckpoint,
   continuityCoveredThrough,
 } from "../../runtime/context/history-compaction.js";
@@ -233,7 +234,12 @@ export const memoryTools: ToolHandlers = {
     }
     const fresh = await deps.prisma.thread.findUnique({
       where: { id: thread.id },
-      select: { botId: true, nextMessageSeq: true, historyCompactionGeneration: true },
+      select: {
+        botId: true,
+        nextMessageSeq: true,
+        historyCompactionGeneration: true,
+        historyCompactionSummary: true,
+      },
     });
     if (!fresh || fresh.botId !== bot.id) {
       return call.finish({ error: "This chat is not yours to checkpoint." });
@@ -243,10 +249,18 @@ export const memoryTools: ToolHandlers = {
       nextMessageSeq: fresh.nextMessageSeq,
       cardSeq,
     });
+    const append = args.append === true;
     const checkpoint = continuityCheckpoint({
       letter: args.letter,
       undo: args.undo,
       nextMessageSeq: fresh.nextMessageSeq,
+      ...(append
+        ? {
+            append: true,
+            currentSummary: fresh.historyCompactionSummary,
+            amendedAt: continuityAmendmentDate(new Date()),
+          }
+        : {}),
       ...(coveredThroughSeq === undefined ? {} : { coveredThroughSeq }),
     });
     if ("error" in checkpoint) return call.finish({ error: checkpoint.error });
@@ -258,9 +272,10 @@ export const memoryTools: ToolHandlers = {
       },
       data: {
         historyCompactionSummary: checkpoint.summary,
-        historyCompactedUpToSeq: checkpoint.coveredSeq,
         historyCompactionRetryAfterSeq: null,
         historyCompactionGeneration: { increment: 1 },
+        // A correction stays beside the letter and does not move its place in the chat.
+        ...(checkpoint.keepCursor ? {} : { historyCompactedUpToSeq: checkpoint.coveredSeq }),
       },
     });
     if (updated.count !== 1) {
@@ -270,6 +285,14 @@ export const memoryTools: ToolHandlers = {
       });
     }
     const arrivedWhileReading = cardSeq != null && fresh.nextMessageSeq - 1 > cardSeq;
+    if (checkpoint.keepCursor) {
+      return call.finish({
+        ok: true,
+        note: arrivedWhileReading
+          ? "The person read your correction and approved it. It is kept with your letter, and every earlier wording stays. You wake on the letter and its corrections next turn. Messages that arrived while it was being read stay in the chat. Nothing was deleted; search_history can still read the original messages."
+          : "The person read your correction and approved it. It is kept with your letter, and every earlier wording stays. You wake on the letter and its corrections next turn. Nothing was deleted; search_history can still read the original messages.",
+      });
+    }
     return call.finish({
       ok: true,
       coveredThroughSeq: checkpoint.coveredSeq,

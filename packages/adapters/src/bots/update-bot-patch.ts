@@ -1,4 +1,5 @@
-import { BOT_DESCRIPTION_MAX_LENGTH, BOT_NAME_MAX_LENGTH } from "@rakazo/contracts";
+import type { VoiceTone } from "@rakazo/contracts";
+import { BOT_DESCRIPTION_MAX_LENGTH, BOT_NAME_MAX_LENGTH, roomRatioError } from "@rakazo/contracts";
 
 export type UpdateBotPatch = {
   name?: string;
@@ -6,7 +7,14 @@ export type UpdateBotPatch = {
   color?: string;
   notifyOnFinish?: boolean;
   dailyCheckIns?: boolean;
+  voiceTone?: VoiceTone | null;
+  welcomeHome?: boolean;
+  roomNoticeRatio?: number | null;
+  roomUrgentRatio?: number | null;
 };
+
+const EMPTY_UPDATE =
+  "Provide at least one of name, description, notifyOnFinish, color, artifact_id, use_attached_image, voiceTone, welcomeHome, roomNoticeRatio, or roomUrgentRatio.";
 
 function hasUpdateBotAvatarArgs(args: Record<string, unknown>): boolean {
   return (
@@ -32,11 +40,33 @@ export function parseUpdateBotPatch(
     }
     patch.notifyOnFinish = notifyRaw;
   }
+  if (args.voiceTone !== undefined) {
+    const tone = parseVoiceTone(args.voiceTone);
+    if ("error" in tone) return tone;
+    patch.voiceTone = tone.tone;
+  }
+  if (args.welcomeHome !== undefined) {
+    if (typeof args.welcomeHome !== "boolean") {
+      return { error: "welcomeHome must be true or false." };
+    }
+    patch.welcomeHome = args.welcomeHome;
+  }
+  if (args.roomNoticeRatio !== undefined) {
+    const ratio = parseRoomRatio("roomNoticeRatio", args.roomNoticeRatio);
+    if ("error" in ratio) return ratio;
+    patch.roomNoticeRatio = ratio.ratio;
+  }
+  if (args.roomUrgentRatio !== undefined) {
+    const ratio = parseRoomRatio("roomUrgentRatio", args.roomUrgentRatio);
+    if ("error" in ratio) return ratio;
+    patch.roomUrgentRatio = ratio.ratio;
+  }
+  if (patch.roomNoticeRatio !== undefined && patch.roomUrgentRatio !== undefined) {
+    const ratio = roomRatioError(patch.roomNoticeRatio, patch.roomUrgentRatio);
+    if (ratio) return { error: ratio };
+  }
   if (Object.keys(patch).length === 0 && !hasUpdateBotAvatarArgs(args)) {
-    return {
-      error:
-        "Provide at least one of name, description, notifyOnFinish, color, artifact_id, or use_attached_image.",
-    };
+    return { error: EMPTY_UPDATE };
   }
   if (patch.name !== undefined) {
     const nextName = patch.name.trim();
@@ -56,6 +86,43 @@ export function parseUpdateBotPatch(
   return { patch };
 }
 
+function parseVoiceTone(value: unknown): { error: string } | { tone: VoiceTone | null } {
+  if (value === null) return { tone: null };
+  const tone = typeof value === "string" ? value.trim() : value;
+  if (tone === "natural" || tone === "river-time") return { tone };
+  return { error: "voiceTone must be natural or river-time." };
+}
+
+function parseRoomRatio(
+  name: string,
+  value: unknown,
+): { error: string } | { ratio: number | null } {
+  if (value === null) return { ratio: null };
+  const number =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value.trim())
+        : Number.NaN;
+  if (Number.isFinite(number) && number > 0 && number <= 1) return { ratio: number };
+  return { error: `${name} must be above 0 and at most 1, or null to use the default.` };
+}
+
+/**
+ * A ratio sent on its own is checked against the one already stored. An omitted ratio keeps
+ * the default, so a notice of 0.60 with no urgent still sits under 0.85.
+ */
+export function roomRatioPatchError(
+  patch: { roomNoticeRatio?: number | null; roomUrgentRatio?: number | null },
+  current: { roomNoticeRatio?: number | null; roomUrgentRatio?: number | null },
+): string | undefined {
+  if (patch.roomNoticeRatio === undefined && patch.roomUrgentRatio === undefined) return undefined;
+  return roomRatioError(
+    patch.roomNoticeRatio !== undefined ? patch.roomNoticeRatio : current.roomNoticeRatio,
+    patch.roomUrgentRatio !== undefined ? patch.roomUrgentRatio : current.roomUrgentRatio,
+  );
+}
+
 /** The bot's current values that an own `update_bot` call can repeat. */
 export type OwnBotCurrentValues = {
   name: string;
@@ -67,6 +134,10 @@ export type OwnBotCurrentValues = {
   thinkingLevel: string | null;
   autoSpeak: boolean;
   voiceId: string | null;
+  voiceTone?: string | null;
+  welcomeHome?: boolean;
+  roomNoticeRatio?: number | null;
+  roomUrgentRatio?: number | null;
 };
 
 /**
@@ -90,6 +161,11 @@ export function dropUnchangedOwnBotArgs(
     notifyOnFinish: [current.notifyOnFinish],
     notify_on_finish: [current.notifyOnFinish],
     dailyCheckIns: [current.dailyCheckIns],
+    // Null and natural are the same fallback, so echoing "natural" is not a write.
+    voiceTone: [current.voiceTone ?? "natural"],
+    welcomeHome: [current.welcomeHome ?? false],
+    roomNoticeRatio: current.roomNoticeRatio == null ? [] : [current.roomNoticeRatio],
+    roomUrgentRatio: current.roomUrgentRatio == null ? [] : [current.roomUrgentRatio],
     model: currentModelNames.map((name) => name.toLowerCase()),
     thinkingLevel: current.thinkingLevel
       ? [current.thinkingLevel]

@@ -118,6 +118,10 @@ function builtinParameters(tool: ConnectorTool) {
       thinkingLevel: Type.Optional(stringEnum(ThinkingLevelSchema.options, {})),
       readAloud: Type.Optional(Type.Boolean()),
       voice: Type.Optional(Type.String()),
+      voiceTone: Type.Optional(stringEnum(["natural", "river-time"], {})),
+      welcomeHome: Type.Optional(Type.Boolean()),
+      roomNoticeRatio: Type.Optional(Type.Number()),
+      roomUrgentRatio: Type.Optional(Type.Number()),
       bot_id: Type.Optional(Type.String()),
     });
   }
@@ -341,6 +345,7 @@ const FLEET_STRING_ARGS = [
   "thinking_level",
   "thinkingLevel",
   "voice",
+  "voiceTone",
   "section",
   "instructions",
   "expected_version",
@@ -352,6 +357,7 @@ const FLEET_FLAG_ARGS = [
   "clear",
   "use_attached_image",
   "readAloud",
+  "welcomeHome",
 ] as const;
 
 /**
@@ -379,6 +385,11 @@ export function prepareFleetArguments(
     if (argumentGiven(raw[key])) out[key] = raw[key];
   }
   if (argumentGiven(raw.dailyCheckIns)) out.dailyCheckIns = raw.dailyCheckIns;
+  if (toolName === "update_bot") {
+    for (const key of ["roomNoticeRatio", "roomUrgentRatio"] as const) {
+      if (typeof raw[key] === "number" && Number.isFinite(raw[key])) out[key] = raw[key];
+    }
+  }
   const notify = raw.notifyOnFinish ?? raw.notify_on_finish;
   if (argumentGiven(notify)) out.notifyOnFinish = notify;
   // The read pager's offset is a number; the handler validates it.

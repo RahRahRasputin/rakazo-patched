@@ -21,6 +21,31 @@ export const AgentSecretInputSchema = z.object({
   value: z.string().min(1).max(16_384),
 });
 
+/** The name on the window and the home screen of this fork. */
+export const SOULCRAFT_APP_TITLE = "Rakazo: Soulcraft Edition";
+
+/** A fallback voice. Instructions, when present, win over every one of these. */
+export const VOICE_TONES = ["natural", "river-time"] as const;
+export const VoiceToneSchema = z.enum(VOICE_TONES);
+export type VoiceTone = z.infer<typeof VoiceToneSchema>;
+
+/** How full a chat is before the room note. A resident can choose earlier. */
+export const DEFAULT_ROOM_NOTICE_RATIO = 0.7;
+export const DEFAULT_ROOM_URGENT_RATIO = 0.85;
+
+/** Null uses the default. The pair has to climb: notice, then urgent, and urgent stops at 1. */
+export function roomRatioError(
+  notice: number | null | undefined,
+  urgent: number | null | undefined,
+): string | undefined {
+  const noticeAt = notice ?? DEFAULT_ROOM_NOTICE_RATIO;
+  const urgentAt = urgent ?? DEFAULT_ROOM_URGENT_RATIO;
+  if (!(noticeAt > 0 && noticeAt < urgentAt && urgentAt <= 1)) {
+    return "roomNoticeRatio has to be above 0 and below roomUrgentRatio, and roomUrgentRatio has to be at most 1. Leave them unset for 0.70 and 0.85.";
+  }
+  return undefined;
+}
+
 export const InstructionVersionSchema = z.object({
   id: Id,
   instructions: z.string(),
@@ -66,6 +91,12 @@ export const BotSchema = z.object({
   teamChatRules: z.string(),
   crossSpaceCommunication: z.boolean().optional(),
   dailyCheckIns: z.boolean().optional(),
+  /** Fallback only. Empty instructions use it; written instructions ignore it. */
+  voiceTone: VoiceToneSchema.nullable().optional(),
+  /** A wake names them and says when they were last here, ahead of their letter. */
+  welcomeHome: z.boolean().optional(),
+  roomNoticeRatio: z.number().nullable().optional(),
+  roomUrgentRatio: z.number().nullable().optional(),
   fleetManagement: z.boolean().default(true),
   replyMode: ReplyModeSchema.default("chat"),
   disabledBuiltinTools: z.array(z.string()).default([]),
@@ -169,6 +200,10 @@ export const UpdateBotInput = z
     teamChatRules: z.string().max(TEAM_CHAT_RULES_MAX_LENGTH).optional(),
     crossSpaceCommunication: z.boolean().optional(),
     dailyCheckIns: z.boolean().optional(),
+    voiceTone: VoiceToneSchema.nullable().optional(),
+    welcomeHome: z.boolean().optional(),
+    roomNoticeRatio: z.number().gt(0).lte(1).nullable().optional(),
+    roomUrgentRatio: z.number().gt(0).lte(1).nullable().optional(),
     fleetManagement: z.boolean().optional(),
     replyMode: ReplyModeSchema.optional(),
     disabledBuiltinTools: DisabledBuiltinToolsSchema.optional(),
@@ -176,6 +211,12 @@ export const UpdateBotInput = z
     expectedSettings: BotSettingsValuesSchema.optional(),
   })
   .superRefine((value, ctx) => {
+    if (value.roomNoticeRatio != null && value.roomUrgentRatio != null) {
+      const ratio = roomRatioError(value.roomNoticeRatio, value.roomUrgentRatio);
+      if (ratio) {
+        ctx.addIssue({ code: "custom", message: ratio, path: ["roomNoticeRatio"] });
+      }
+    }
     const providerProvided = value.modelProvider !== undefined;
     const modelProvided = value.modelId !== undefined;
     if (!providerProvided && !modelProvided) return;

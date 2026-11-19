@@ -1,8 +1,28 @@
+import {
+  DEFAULT_ROOM_NOTICE_RATIO,
+  DEFAULT_ROOM_URGENT_RATIO,
+  roomRatioError,
+} from "@rakazo/contracts";
+
 /** Notice when the loaded chat, or the message count, reaches this much of its room. */
-export const ROOM_NOTICE_RATIO = 0.7;
+export const ROOM_NOTICE_RATIO = DEFAULT_ROOM_NOTICE_RATIO;
 
 /** The same check, once the room is nearly full. */
-export const ROOM_URGENT_RATIO = 0.85;
+export const ROOM_URGENT_RATIO = DEFAULT_ROOM_URGENT_RATIO;
+
+/** A stored pair that does not climb falls back, so a bad row cannot invert the warnings. */
+function roomThresholds(
+  notice: number | null | undefined,
+  urgent: number | null | undefined,
+): { notice: number; urgent: number } {
+  if (roomRatioError(notice, urgent)) {
+    return { notice: ROOM_NOTICE_RATIO, urgent: ROOM_URGENT_RATIO };
+  }
+  return {
+    notice: notice ?? ROOM_NOTICE_RATIO,
+    urgent: urgent ?? ROOM_URGENT_RATIO,
+  };
+}
 
 /**
  * Messages that used to start a machine summary: the verbatim window plus one batch.
@@ -71,12 +91,15 @@ export function contextRoomNote(input: {
   name: string;
   personName: string | null | undefined;
   ratio: number;
+  noticeRatio?: number | null;
+  urgentRatio?: number | null;
 }): string | undefined {
-  if (!(input.ratio >= ROOM_NOTICE_RATIO)) return undefined;
+  const thresholds = roomThresholds(input.noticeRatio, input.urgentRatio);
+  if (!(input.ratio >= thresholds.notice)) return undefined;
   const resident = input.name.trim();
   const person = input.personName?.trim() || "the person you live with";
   const opening =
-    input.ratio >= ROOM_URGENT_RATIO
+    input.ratio >= thresholds.urgent
       ? `${resident ? `${resident}, this` : "This"} chat is nearly out of room.`
       : `${resident ? `${resident}, you're` : "You're"} running low on room.`;
   return [

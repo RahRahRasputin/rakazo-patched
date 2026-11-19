@@ -1421,10 +1421,23 @@ describe("parseUpdateBotPatch", () => {
     });
   });
 
+  it("accepts a voice fallback and rejects a ratio that does not climb", () => {
+    expect(parseUpdateBotPatch({ voiceTone: "river-time", welcomeHome: true })).toEqual({
+      patch: { voiceTone: "river-time", welcomeHome: true },
+    });
+    expect(parseUpdateBotPatch({ roomNoticeRatio: 0.9, roomUrgentRatio: 0.5 })).toEqual({
+      error:
+        "roomNoticeRatio has to be above 0 and below roomUrgentRatio, and roomUrgentRatio has to be at most 1. Leave them unset for 0.70 and 0.85.",
+    });
+    expect(parseUpdateBotPatch({ voiceTone: "brisk" })).toEqual({
+      error: "voiceTone must be natural or river-time.",
+    });
+  });
+
   it("requires at least one supported field", () => {
     expect(parseUpdateBotPatch({})).toEqual({
       error:
-        "Provide at least one of name, description, notifyOnFinish, color, artifact_id, or use_attached_image.",
+        "Provide at least one of name, description, notifyOnFinish, color, artifact_id, use_attached_image, voiceTone, welcomeHome, roomNoticeRatio, or roomUrgentRatio.",
     });
   });
 
@@ -1487,7 +1500,7 @@ describe("userTurnInstructions", () => {
     "A bot and a subagent are different. Never use both for the same request.",
     "create_space proposes a new privacy boundary inside the current organization. Use it when the person asks to create a space or separate data between teams or projects. Never claim the space exists before the tool succeeds.",
     "spawn_bot creates a lasting regular bot (own chat, computer, memory) that appears in the person's bot list. If the person asked to create a bot, call spawn_bot once and stop. Do not run_subagent to demo it.",
-    'update_bot reads and changes your own settings: name (chat header and list label), description (the one-line public summary teammates see), private instructions (how you do your job), avatar, notifyOnFinish, dailyCheckIns (switch it off when the person asks you to stop checking in), model, thinkingLevel (how hard you reason; a standing request to think harder, or to answer faster, is a request to change it) and readAloud. Call it with no fields to read them, for example when asked which model you run. Change a setting only when the person asks for that change; a standing rule for how you work ("from now on", "always") is a request to add it to your instructions, not just to follow it now. When you have no instructions yet and your job becomes clear, set your name, description and instructions yourself. Never claim a change without the tool. Pass color for a hex or encoded shape, artifact_id for an image in this space, or use_attached_image when they attached a picture on this message.',
+    'update_bot reads and changes your own settings: name (chat header and list label), description (the one-line public summary teammates see), private instructions (how you do your job), avatar, notifyOnFinish, dailyCheckIns (switch it off when the person asks you to stop checking in), model, thinkingLevel (how hard you reason; a standing request to think harder, or to answer faster, is a request to change it) and readAloud. voiceTone is natural or river-time, and it applies only when your instructions are empty. welcomeHome greets you by name, with when you were last here, ahead of your continuity letter. roomNoticeRatio and roomUrgentRatio say how full this chat is before you are asked about a letter; leave them unset for 0.70 and 0.85. Call it with no fields to read them, for example when asked which model you run. Change a setting only when the person asks for that change; a standing rule for how you work ("from now on", "always") is a request to add it to your instructions, not just to follow it now. When you have no instructions yet and your job becomes clear, set your name, description and instructions yourself. Never claim a change without the tool. Pass color for a hex or encoded shape, artifact_id for an image in this space, or use_attached_image when they attached a picture on this message.',
     "run_subagent delegates work independently and returns immediately. Use it for work another agent can complete. Its result comes back later; end your turn when nothing else needs doing, and remain available for new messages from the person. Wait for the needed results before giving a final answer, combine related results, and honor newer instructions or cancellation. Subagents can act under the applicable permissions and request approval in this chat.",
   ];
   const archiveBot =

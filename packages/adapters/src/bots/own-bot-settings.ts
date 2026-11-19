@@ -29,6 +29,10 @@ export type OwnBotSettingsRow = {
   thinkingLevel: string | null;
   autoSpeak: boolean;
   voiceId: string | null;
+  voiceTone?: string | null;
+  welcomeHome?: boolean;
+  roomNoticeRatio?: number | null;
+  roomUrgentRatio?: number | null;
 };
 
 /** Ids listed per connected provider; the rest are reachable by name. */
@@ -82,6 +86,10 @@ export async function readOwnBotSettings(
     avatar: bot.color.startsWith("data:image/") ? "image" : bot.color,
     notifyOnFinish: bot.notifyOnFinish,
     dailyCheckIns: bot.dailyCheckIns,
+    voiceTone: bot.voiceTone === "river-time" ? "river-time" : "natural",
+    welcomeHome: bot.welcomeHome ?? false,
+    roomNoticeRatio: bot.roomNoticeRatio ?? null,
+    roomUrgentRatio: bot.roomUrgentRatio ?? null,
     model: botModelLabel(bot, effective),
     thinkingLevel: bot.thinkingLevel ?? "default",
     readAloud: bot.autoSpeak,

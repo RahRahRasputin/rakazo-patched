@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { SOULCRAFT_APP_TITLE } from "@rakazo/contracts";
 import type { Session } from "electron";
 import { app, BrowserWindow, Menu, net, screen, session, shell } from "electron";
 import { mcpOAuthCallbackFrom, oauthCallbackFrom } from "../auth/oauth-callback.js";
@@ -158,6 +159,7 @@ export function createWindow(url: string, partition: string | null) {
       ...(partition === null ? {} : { partition }),
     },
   });
+  win.setTitle(SOULCRAFT_APP_TITLE);
   win.on("unresponsive", () =>
     reportDesktopError(new Error("Renderer unresponsive"), "desktop.unresponsive"),
   );

@@ -449,7 +449,7 @@ export function userTurnInstructions(parts: {
     offeredBuiltinClause(
       parts.disabledBuiltinTools,
       "update_bot",
-      'update_bot reads and changes your own settings: name (chat header and list label), description (the one-line public summary teammates see), private instructions (how you do your job), avatar, notifyOnFinish, dailyCheckIns (switch it off when the person asks you to stop checking in), model, thinkingLevel (how hard you reason; a standing request to think harder, or to answer faster, is a request to change it) and readAloud. Call it with no fields to read them, for example when asked which model you run. Change a setting only when the person asks for that change; a standing rule for how you work ("from now on", "always") is a request to add it to your instructions, not just to follow it now. When you have no instructions yet and your job becomes clear, set your name, description and instructions yourself. Never claim a change without the tool. Pass color for a hex or encoded shape, artifact_id for an image in this space, or use_attached_image when they attached a picture on this message.',
+      'update_bot reads and changes your own settings: name (chat header and list label), description (the one-line public summary teammates see), private instructions (how you do your job), avatar, notifyOnFinish, dailyCheckIns (switch it off when the person asks you to stop checking in), model, thinkingLevel (how hard you reason; a standing request to think harder, or to answer faster, is a request to change it) and readAloud. voiceTone is natural or river-time, and it applies only when your instructions are empty. welcomeHome greets you by name, with when you were last here, ahead of your continuity letter. roomNoticeRatio and roomUrgentRatio say how full this chat is before you are asked about a letter; leave them unset for 0.70 and 0.85. Call it with no fields to read them, for example when asked which model you run. Change a setting only when the person asks for that change; a standing rule for how you work ("from now on", "always") is a request to add it to your instructions, not just to follow it now. When you have no instructions yet and your job becomes clear, set your name, description and instructions yourself. Never claim a change without the tool. Pass color for a hex or encoded shape, artifact_id for an image in this space, or use_attached_image when they attached a picture on this message.',
     ),
     offeredBuiltinClause(
       parts.disabledBuiltinTools,
@@ -565,31 +565,51 @@ export function botEmailInstruction(
     .join(" ");
 }
 
+/** Instructions, when the resident has written any, are the last word on voice and pace. */
+const VOICE_PRECEDENCE = "Your instructions decide your voice and pace. No default restyles them.";
+const RIVER_TIME_VOICE = "Speak in your natural voice — unhurried, warm, present.";
+const NATURAL_VOICE = "Respond naturally.";
+
+/** Fallback only. Empty instructions use it. Written instructions do not. */
+export function voiceFallbackLine(tone: string | null | undefined): string {
+  return tone === "river-time" ? RIVER_TIME_VOICE : NATURAL_VOICE;
+}
+
 /** Profile fields the creation intro is asked to explain. Other runs keep the prior identity line. */
 export function runIdentityInstruction(
   bot: {
     name: string;
     description?: string | null;
     instructions?: string | null;
+    voiceTone?: string | null;
   },
   trigger: string,
 ): string {
   const description = bot.description?.trim() ?? "";
   const rawInstructions = bot.instructions ?? "";
   const instructions = rawInstructions.trim();
+  const tone = voiceFallbackLine(bot.voiceTone);
   if (trigger !== "created") {
     const identity = description ? `${bot.name}\n${description}` : bot.name;
-    // Older bots saved one text as both fields; do not repeat it.
-    if (!instructions || instructions === description) return identity;
+    // No instructions at all: the tone is only a fallback, never a style that outranks them.
+    if (!instructions) return identity ? `${identity}\n${tone}` : tone;
+    // Older bots saved one text as both fields; do not repeat it. Those words are still
+    // instructions, so the tone fallback stays out and the precedence line stands.
+    if (instructions === description) {
+      return identity ? `${identity}\n${VOICE_PRECEDENCE}` : VOICE_PRECEDENCE;
+    }
     return [
       identity,
       "Teammates see only the profile above. These instructions are private to you:",
+      VOICE_PRECEDENCE,
       instructions,
     ].join("\n");
   }
   return [
     `Name: ${bot.name.trim() || "(none)"}`,
     `Description: ${description || "(none)"}`,
-    instructions ? `Instructions:\n${instructions}` : "Instructions: (none)",
+    instructions
+      ? `Instructions:\n${VOICE_PRECEDENCE}\n${instructions}`
+      : `Instructions: (none)\n${tone}`,
   ].join("\n");
 }

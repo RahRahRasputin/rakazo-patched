@@ -109,7 +109,7 @@ import {
   stopStackLeftBehind,
 } from "./this-computer/stop-local-stack.js";
 import type { ElectronAutoUpdater } from "./updates/auto-update.js";
-import { DesktopUpdateController } from "./updates/auto-update.js";
+import { DesktopUpdateController, forkDisablesAutoUpdate } from "./updates/auto-update.js";
 import { verifyDownloadedLinuxUpdate } from "./updates/linux-update-signature.js";
 import { applicationMenuInstaller, installUpdate } from "./windows/app-menu.js";
 import { createAppOpener } from "./windows/app-opener.js";
@@ -144,7 +144,7 @@ const updaterEnvironment = {
   // A `--dir` build has no update feed to read.
   packaged: app.isPackaged && existsSync(path.join(process.resourcesPath, "app-update.yml")),
   version: app.getVersion(),
-  disabled: process.env.RAKAZO_DISABLE_AUTO_UPDATE === "1",
+  disabled: forkDisablesAutoUpdate(process.env.RAKAZO_DISABLE_AUTO_UPDATE),
 };
 let requestingComputerAccess = false;
 let hostScreen: HostScreen | undefined;

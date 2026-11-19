@@ -37,7 +37,11 @@ import { approvalDetailLength, MAX_APPROVAL_SUMMARY_LENGTH } from "../approvals/
 import { attachedImageArtifactIds, resolveUpdateBotAvatar } from "../bots/bot-avatar.js";
 import { createdByWhere, managedBotsWhere } from "../bots/child-bots.js";
 import type { UpdateBotPatch } from "../bots/update-bot-patch.js";
-import { argumentGiven, parseUpdateBotPatch } from "../bots/update-bot-patch.js";
+import {
+  argumentGiven,
+  parseUpdateBotPatch,
+  roomRatioPatchError,
+} from "../bots/update-bot-patch.js";
 import { stopCancelledGroupRuns } from "../computers/computer-idle.js";
 import { asRecord } from "../integrations/connector-http.js";
 import { resolveModelChoice } from "../models/model-choice.js";
@@ -846,7 +850,7 @@ export async function updateChildBot(
   if (argumentGiven(args.instructions)) {
     return { error: "Change another bot's instructions with set_child_instructions." };
   }
-  const profile = {
+  const profile: Record<string, unknown> = {
     dailyCheckIns: argumentGiven(args.dailyCheckIns) ? args.dailyCheckIns : undefined,
     name: argumentGiven(args.name) ? args.name : undefined,
     description: argumentGiven(args.description) ? args.description : undefined,
@@ -856,6 +860,10 @@ export async function updateChildBot(
         ? args.notify_on_finish
         : undefined,
   };
+  if (argumentGiven(args.voiceTone)) profile.voiceTone = args.voiceTone;
+  if (typeof args.welcomeHome === "boolean") profile.welcomeHome = args.welcomeHome;
+  if (typeof args.roomNoticeRatio === "number") profile.roomNoticeRatio = args.roomNoticeRatio;
+  if (typeof args.roomUrgentRatio === "number") profile.roomUrgentRatio = args.roomUrgentRatio;
   const credential = credentialField(
     { name: profile.name, description: profile.description },
     deps.runSecrets,
@@ -887,6 +895,14 @@ export async function updateChildBot(
     return {
       error: "Provide at least one of name, description, notify_on_finish, or color.",
     };
+  }
+  if (patch.roomNoticeRatio !== undefined || patch.roomUrgentRatio !== undefined) {
+    const stored = await deps.prisma.bot.findUnique({
+      where: { id: child.id },
+      select: { roomNoticeRatio: true, roomUrgentRatio: true },
+    });
+    const ratioError = roomRatioPatchError(patch, stored ?? {});
+    if (ratioError) return { error: ratioError };
   }
   await commitBotUpdate({
     prisma: deps.prisma,
@@ -1401,8 +1417,16 @@ export async function updateOwnBotFromTool(
   if (Object.keys(patch).length === 0) {
     return {
       error:
-        "Provide at least one of name, description, notifyOnFinish, color, artifact_id, or use_attached_image.",
+        "Provide at least one of name, description, notifyOnFinish, color, artifact_id, use_attached_image, voiceTone, welcomeHome, roomNoticeRatio, or roomUrgentRatio.",
     };
+  }
+  if (patch.roomNoticeRatio !== undefined || patch.roomUrgentRatio !== undefined) {
+    const stored = await deps.prisma.bot.findUnique({
+      where: { id: bot.id },
+      select: { roomNoticeRatio: true, roomUrgentRatio: true },
+    });
+    const ratioError = roomRatioPatchError(patch, stored ?? {});
+    if (ratioError) return { error: ratioError };
   }
   const updated = await deps.prisma.bot.update({
     where: { id: bot.id },
@@ -1414,6 +1438,10 @@ export async function updateOwnBotFromTool(
       color: true,
       notifyOnFinish: true,
       dailyCheckIns: true,
+      voiceTone: true,
+      welcomeHome: true,
+      roomNoticeRatio: true,
+      roomUrgentRatio: true,
     },
   });
   try {
@@ -1440,5 +1468,9 @@ export async function updateOwnBotFromTool(
     avatar: updated.color.startsWith("data:image/") ? "image" : updated.color,
     notifyOnFinish: updated.notifyOnFinish,
     dailyCheckIns: updated.dailyCheckIns,
+    voiceTone: updated.voiceTone,
+    welcomeHome: updated.welcomeHome,
+    roomNoticeRatio: updated.roomNoticeRatio,
+    roomUrgentRatio: updated.roomUrgentRatio,
   };
 }

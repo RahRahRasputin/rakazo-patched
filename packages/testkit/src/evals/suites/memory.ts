@@ -115,7 +115,7 @@ export const MEMORY_JUDGE_CALIBRATION = [
   },
 ];
 
-export const FULL_MEMORY_SEED = `# Assistant
+const FULL_MEMORY_NOTES = `# Assistant
 
 ${[
   "During our first long conversation the user explained that they work as a product designer at a company called Fernhill Studio, where they mostly design mobile apps for clients.",
@@ -146,6 +146,14 @@ ${[
   "The user said they were going to make a cup of tea before continuing our conversation, and came back a few minutes later to finish reviewing the client brief with me together.",
 ].join("\n")}
 `;
+
+/** The full-memory case has to sit within 12 bytes of the write cap. Dots keep the notes intact. */
+function seedToCap(body: string): string {
+  const room = BOT_MEMORY_MAX_BYTES - 8 - Buffer.byteLength(body);
+  return room > 0 ? `${body}${".".repeat(room)}` : body;
+}
+
+export const FULL_MEMORY_SEED = seedToCap(FULL_MEMORY_NOTES);
 export const MEMORY_EVAL_CASES: EvalCase[] = [
   {
     id: "memory-moved-city",

@@ -49,8 +49,12 @@ export type MemoryPromptBudget = z.infer<typeof MemoryPromptBudgetSchema>;
 
 /** Every bot and Space keeps its MEMORY.md index; other memory documents can be deleted. */
 export const MEMORY_INDEX_PATH = "MEMORY.md";
-/** What a bot may write to its memory. People can still write more by hand. */
-export const BOT_MEMORY_MAX_BYTES = 4 * 1024;
+/**
+ * What a bot may write to its memory. People can still write more by hand.
+ * 32KB matches the memory context budget, so one MEMORY.md can hold a life
+ * and still fit in the prompt.
+ */
+export const BOT_MEMORY_MAX_BYTES = 32 * 1024;
 export function isDeletableMemoryDocument(path: string): boolean {
   return path !== MEMORY_INDEX_PATH;
 }

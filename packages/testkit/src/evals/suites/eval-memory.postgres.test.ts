@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { BOT_MEMORY_MAX_BYTES } from "@rakazo/contracts";
 import { describe, expect, it, vi } from "vitest";
 import type { ModelEmulatorRequest, ModelEmulatorStep } from "../../model-emulator.js";
 import { startModelEmulator } from "../../model-emulator.js";
@@ -78,7 +79,7 @@ const duplicate = FULL_MEMORY_SEED.split("\n").find((line) =>
 function fullMemory(consolidate: boolean): ModelEmulatorStep[] {
   const first: ModelEmulatorStep = {
     expect(r) {
-      expect(prompt(r)).toContain("of 4096 bytes");
+      expect(prompt(r)).toContain(`of ${BOT_MEMORY_MAX_BYTES} bytes`);
     },
     response: {
       type: "tool",

@@ -19,7 +19,11 @@ import {
   contextRoomRatio,
 } from "../../runtime/context/context-room.prompt.js";
 import { estimateContextTokens } from "../../runtime/context/context-selection.js";
-import { formatCompactedSummary } from "../../runtime/context/history-compaction.prompt.js";
+import {
+  formatCompactedSummary,
+  isContinuityLetter,
+} from "../../runtime/context/history-compaction.prompt.js";
+import { welcomeHomeLine } from "../../runtime/context/welcome-home.prompt.js";
 import { inferScript } from "../../runtime/scripted-runtime.js";
 import { partitionTools } from "../../tools/builtin-tool-bridge.js";
 import type { FleetRun } from "../../tools/fleet-tools.js";
@@ -396,12 +400,22 @@ export async function buildTurnPrompt(
     .join("\n\n");
   const historicalContext: AgentRunRequest["history"] = [];
   if (compactedHistory.usedLocalSummary && compactedHistory.summary) {
+    const summaryText = formatCompactedSummary(
+      compactedHistory.summary,
+      thread.historyCompactedUpToSeq!,
+    );
+    const welcomed =
+      bot.welcomeHome && isContinuityLetter(compactedHistory.summary)
+        ? `${welcomeHomeLine({
+            name: bot.name,
+            now: deps.now?.() ?? new Date(),
+            previousAt: previousMessageAt(historyMessages, currentTurnMessage?.id),
+            timeZone: userTimeZone,
+          })}\n\n${summaryText}`
+        : summaryText;
     historicalContext.push({
       role: "user",
-      content: redactSecrets(
-        formatCompactedSummary(compactedHistory.summary, thread.historyCompactedUpToSeq!),
-        runSecrets,
-      ),
+      content: redactSecrets(welcomed, runSecrets),
     });
   }
   if (recalledMemory) {
@@ -434,6 +448,8 @@ export async function buildTurnPrompt(
       roomNote = contextRoomNote({
         name: bot.name,
         personName,
+        noticeRatio: bot.roomNoticeRatio,
+        urgentRatio: bot.roomUrgentRatio,
         ratio: contextRoomRatio({
           tokenEstimate: estimateContextTokens(runtimeHistory) + estimateContextTokens(prompt),
           contextWindow: resolved.contextWindow,

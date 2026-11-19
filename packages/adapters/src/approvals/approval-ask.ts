@@ -215,23 +215,39 @@ export function buildApprovalAskBlock(
   }
   if (toolName === "write_checkpoint") {
     const undo = args.undo === true;
+    const append = args.append === true;
     const letter = typeof args.letter === "string" ? args.letter.trim() : "";
-    const conflict = undo && letter.length > 0;
+    const conflict = undo && (letter.length > 0 || append);
+    const amendment = append && !undo;
     const tooLong = letter.length > CONTINUITY_LETTER_MAX;
+    const letterCount = (text: string) =>
+      `${text.length.toLocaleString("en-US")} / ${CONTINUITY_LETTER_MAX.toLocaleString("en-US")} characters`;
+    const withCount = (text: string) => `${text}\n\n${letterCount(text)}`;
     const laterMessages =
       "Messages that arrive while you read this stay in the chat. The letter covers the conversation up through now.";
+    const amendmentNote =
+      "Messages that arrive while you read this stay in the chat. This correction is added to the letter and dated when you approve it. The earlier wording stays.";
     const detail = conflict
-      ? [
-          "A letter and an undo were both sent, so nothing will change. Ask for the letter on its own, or ask to bring the recent messages back on its own.",
-          tooLong
-            ? `The letter is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}.`
-            : letter,
-        ].join("\n\n")
+      ? letter.length > 0
+        ? [
+            "A letter and an undo were both sent, so nothing will change. Ask for the letter on its own, or ask to bring the recent messages back on its own.",
+            tooLong
+              ? `The letter is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}.`
+              : withCount(letter),
+          ].join("\n\n")
+        : "An amendment and an undo were both sent, so nothing will change. Ask for the correction on its own, or ask to bring the recent messages back on its own."
       : undo
         ? "This takes the letter out of the active chat. The recent messages come back into view. Anything older stays searchable with search_history. Nothing was deleted."
-        : tooLong
-          ? `This letter is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}, so approving will not install it. Ask for a shorter letter.`
-          : `${letter}\n\n${laterMessages}`;
+        : amendment && !letter
+          ? "A correction needs words. The letter stays as it is."
+          : amendment && tooLong
+            ? `This correction is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}, so approving will not install it. The letter stays as it is.`
+            : amendment
+              ? `${withCount(letter)}\n\n${amendmentNote}`
+              : tooLong
+                ? `This letter is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}, so approving will not install it. Ask for a shorter letter.\n\n${letterCount(letter)}`
+                : `${withCount(letter)}\n\n${laterMessages}`;
+    const emptyOrTooLong = amendment && (!letter || tooLong);
     return {
       kind: "ask",
       approvalEffectId: effectId,
@@ -239,7 +255,13 @@ export function buildApprovalAskBlock(
         ? "This checkpoint asks for two different things"
         : undo
           ? "Bring the earlier messages back?"
-          : "Read this continuity letter?",
+          : emptyOrTooLong
+            ? tooLong
+              ? "This amendment is too long"
+              : "This amendment is empty"
+            : amendment
+              ? "Read this amendment?"
+              : "Read this continuity letter?",
       detail: redactSecrets(detail, secrets),
       detailFormat: "text",
       status: "pending",
@@ -250,10 +272,17 @@ export function buildApprovalAskBlock(
               { id: "allow", label: "Bring them back" },
               { id: "deny", label: "Keep the chat as it is" },
             ]
-          : [
-              { id: "allow", label: "Wake them on this" },
-              { id: "deny", label: "Keep the chat as it is" },
-            ],
+          : emptyOrTooLong
+            ? [{ id: "deny", label: "Keep the letter as it is" }]
+            : amendment
+              ? [
+                  { id: "allow", label: "Wake them on this" },
+                  { id: "deny", label: "Keep the letter as it is" },
+                ]
+              : [
+                  { id: "allow", label: "Wake them on this" },
+                  { id: "deny", label: "Keep the chat as it is" },
+                ],
     };
   }
   const fetchSite = webFetchSite(toolName, args);

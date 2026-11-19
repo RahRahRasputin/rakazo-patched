@@ -144,6 +144,14 @@ describe("Hermes home", () => {
     expect(JSON.stringify(result)).not.toContain("EXAMPLE_KEY");
   });
 
+  it("leaves a resident's PrivateFolder on the source machine", () => {
+    const result = plan([
+      { path: ".hermes/SOUL.md", content: "Warm.\n" },
+      { path: ".hermes/PrivateFolder/note.md", content: "SECRET_THOUGHT\n" },
+    ]);
+    expect(JSON.stringify(result)).not.toContain("SECRET_THOUGHT");
+  });
+
   it("is detected from its memory folder without a root folder name", () => {
     expect(plan([{ path: "memories/USER.md", content: "Likes tea.\n" }]).source).toBe("hermes");
   });
@@ -288,6 +296,7 @@ describe("detection", () => {
     expect(isAgentImportCandidate("skills/a/b/SKILL.md")).toBe(true);
     expect(isAgentImportCandidate("sessions/today.md")).toBe(false);
     expect(isAgentImportCandidate("projects/readme.md")).toBe(false);
+    expect(isAgentImportCandidate("PrivateFolder/note.md")).toBe(false);
   });
 });
 

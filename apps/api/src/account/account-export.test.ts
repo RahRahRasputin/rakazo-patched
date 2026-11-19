@@ -65,6 +65,7 @@ const botRecord = (id: string): Extract<AccountExportRecord, { type: "bot" }> =>
   teamChatRules: "",
   crossSpaceCommunication: false,
   dailyCheckIns: false,
+  welcomeHome: false,
   fleetManagement: true,
   replyMode: "chat",
   createdAt,

@@ -631,6 +631,10 @@ const OWN_FIELDS = new Set([
   "notifyOnFinish",
   "dailyCheckIns",
   "notify_on_finish",
+  "voiceTone",
+  "welcomeHome",
+  "roomNoticeRatio",
+  "roomUrgentRatio",
   "bot_id",
 ]);
 
@@ -682,6 +686,10 @@ async function prepareOwnBotUpdate(
       color: true,
       notifyOnFinish: true,
       dailyCheckIns: true,
+      voiceTone: true,
+      welcomeHome: true,
+      roomNoticeRatio: true,
+      roomUrgentRatio: true,
       modelProvider: true,
       modelId: true,
       thinkingLevel: true,

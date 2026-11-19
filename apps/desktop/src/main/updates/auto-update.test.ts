@@ -6,6 +6,7 @@ import type { ElectronAutoUpdater, UpdaterEvent } from "./auto-update.js";
 import {
   classifyUpdaterFailure,
   DesktopUpdateController,
+  forkDisablesAutoUpdate,
   initialUpdateState,
   MIN_CHECK_INTERVAL_MS,
   reduceUpdateState,
@@ -51,6 +52,15 @@ function fakeUpdater(overrides: Partial<ElectronAutoUpdater> = {}) {
     },
   };
 }
+
+describe("forkDisablesAutoUpdate", () => {
+  it("stays off unless the install explicitly opts in with 0", () => {
+    expect(forkDisablesAutoUpdate(undefined)).toBe(true);
+    expect(forkDisablesAutoUpdate("1")).toBe(true);
+    expect(forkDisablesAutoUpdate("")).toBe(true);
+    expect(forkDisablesAutoUpdate("0")).toBe(false);
+  });
+});
 
 describe("updaterSupport", () => {
   it("only runs in an installed build that has not opted out", () => {

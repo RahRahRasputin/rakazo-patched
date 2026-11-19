@@ -14,6 +14,14 @@ export interface UpdaterEnvironment {
   disabled?: boolean;
 }
 
+/**
+ * This fork does not check for upstream updates unless the install opts in.
+ * Unset and any value other than "0" stay off. "0" is the explicit re-enable.
+ */
+export function forkDisablesAutoUpdate(flag: string | undefined): boolean {
+  return flag !== "0";
+}
+
 export function updaterSupport(env: UpdaterEnvironment): { supported: boolean; reason: string } {
   if (env.disabled === true) {
     return { supported: false, reason: t("Automatic updates are turned off for this install.") };

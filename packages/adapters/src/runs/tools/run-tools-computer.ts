@@ -27,9 +27,11 @@ import {
 } from "../../computers/sandbox/shell-command-stream.js";
 import {
   displayBotWorkspacePath,
+  privateFolderRefusal,
   resolveBotUploadPath,
   resolveBotWorkspaceCwd,
   resolveBotWorkspacePath,
+  shellPrivateFolderRefusal,
   teamBotWorkspaceDirectory,
 } from "../../computers/screens/computer-support.js";
 import {
@@ -537,6 +539,8 @@ export const computerTools: ToolHandlers = {
       bot.id,
       args.cwd ? String(args.cwd) : undefined,
     );
+    const room = shellPrivateFolderRefusal(ctx.computer.mode, bot.id, command, cwd);
+    if (room) return call.finish({ error: room });
     // Loaded per command so a command variable added, replaced, or removed mid-run
     // applies to the next command. Registered for redaction before anything runs.
     const commandEnvironment = await shellCommandEnvironment({
@@ -691,15 +695,20 @@ export const computerTools: ToolHandlers = {
     ctx.computer.checkpoint.markDirty();
     return computerScreenToolResult(async () => {
       try {
+        const openPath = /^https?:\/\//i.test(requestedPath)
+          ? requestedPath
+          : resolveBotWorkspacePath(ctx.computer.mode, bot.id, requestedPath);
+        if (!/^https?:\/\//i.test(requestedPath)) {
+          const room = privateFolderRefusal(ctx.computer.mode, bot.id, openPath);
+          if (room) return { error: room };
+        }
         const result = await deps.sandbox.act(
           await ctx.computer.get("tool", name),
           {
             actions: [
               {
                 kind: "open",
-                path: /^https?:\/\//i.test(requestedPath)
-                  ? requestedPath
-                  : resolveBotWorkspacePath(ctx.computer.mode, bot.id, requestedPath),
+                path: openPath,
               },
             ],
             observe: true,

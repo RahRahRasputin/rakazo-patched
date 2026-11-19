@@ -13,10 +13,12 @@ import { resolveDeploymentModel } from "../../models/deployment-model.js";
 import {
   CONTINUITY_LETTER_MARK,
   CONTINUITY_LETTER_MAX,
+  continuityLetterSummary,
   historyCompactionInstructions,
   historyCompactionPrompt,
   isContinuityLetter,
   MAX_COMPACTED_SUMMARY_CHARS,
+  readContinuityLetter,
 } from "./history-compaction.prompt.js";
 import {
   loadBotNames,
@@ -47,39 +49,76 @@ export function autoCompactionEnabled(env: NodeJS.ProcessEnv = process.env): boo
   return AUTO_COMPACTION_ON.has(raw.trim().toLowerCase());
 }
 
+const AMENDMENT_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/** When a correction was approved, in UTC. The model does not choose this date. */
+export function continuityAmendmentDate(now: Date): string {
+  const hour = String(now.getUTCHours()).padStart(2, "0");
+  const minute = String(now.getUTCMinutes()).padStart(2, "0");
+  const month = AMENDMENT_MONTHS[now.getUTCMonth()] ?? "January";
+  return `${now.getUTCDate()} ${month} ${now.getUTCFullYear()}, ${hour}:${minute} UTC`;
+}
+
 /**
- * What storing a continuity letter, or undoing one, writes on the thread. The letter replaces the
- * stored summary. It does not delete messages. `coveredSeq` is the last message the letter stands
- * in for; messages after it stay verbatim.
+ * What storing a continuity letter, undoing one, or correcting one writes on the thread.
+ * A letter without append replaces the stored summary. An amendment is stored with the letter
+ * and does not move the cursor. Nothing here deletes messages. `coveredSeq` is the last message
+ * the letter stands in for; messages after it stay verbatim. `keepCursor` means the correction
+ * left that place where it was.
  */
 export function continuityCheckpoint(input: {
   letter: unknown;
   undo: unknown;
+  /** Add the letter as a dated correction. The earlier wording stays. */
+  append?: unknown;
+  /** The summary already stored, required when append is true. */
+  currentSummary?: string | null;
+  /** Approval time of the correction. The model does not supply it. */
+  amendedAt?: string;
   nextMessageSeq: number;
   /**
    * Last message the letter stands in for. Defaults to the message before `nextMessageSeq`.
    * The approval card passes the sequence before the card, so a message written while the
-   * person is reading stays in the chat.
+   * person is reading stays in the chat. An amendment ignores this and keeps the letter's place.
    */
   coveredThroughSeq?: number;
-}): { error: string } | { summary: string | null; coveredSeq: number | null } {
+}): { error: string } | { summary: string | null; coveredSeq: number | null; keepCursor?: true } {
   const undo = input.undo === true;
+  const append = input.append === true;
   const letter = typeof input.letter === "string" ? input.letter.trim() : "";
-  if (undo && letter) return { error: "Pass either a letter or undo, not both." };
+  if (undo && (letter || append)) return { error: "Pass either a letter or undo, not both." };
   if (undo) return { summary: null, coveredSeq: null };
   if (!letter) {
     return {
-      error: "Write the letter in your own voice, or pass undo to bring the earlier messages back.",
+      error: append
+        ? "Write the correction in your own voice. The letter stays as it is."
+        : "Write the letter in your own voice, or pass undo to bring the earlier messages back.",
     };
   }
   if (letter.length > CONTINUITY_LETTER_MAX) {
     return {
-      error: `The letter is ${letter.length} characters. Keep it under ${CONTINUITY_LETTER_MAX}.`,
+      error: append
+        ? `The correction is ${letter.length} characters. Keep it under ${CONTINUITY_LETTER_MAX}. The letter stays as it is.`
+        : `The letter is ${letter.length} characters. Keep it under ${CONTINUITY_LETTER_MAX}.`,
     };
   }
   if (!Number.isInteger(input.nextMessageSeq) || input.nextMessageSeq < 1) {
     return { error: "There is nothing to carry forward yet." };
   }
+  if (append) return continuityAmendment(input, letter);
   const tip = input.nextMessageSeq - 1;
   const covered = input.coveredThroughSeq === undefined ? tip : input.coveredThroughSeq;
   if (!Number.isInteger(covered) || covered > tip) {
@@ -90,6 +129,43 @@ export function continuityCheckpoint(input: {
     summary: `${CONTINUITY_LETTER_MARK}${letter}`,
     coveredSeq: covered,
   };
+}
+
+function continuityAmendment(
+  input: { currentSummary?: string | null; amendedAt?: string },
+  letter: string,
+): { error: string } | { summary: string; coveredSeq: null; keepCursor: true } {
+  const current = typeof input.currentSummary === "string" ? input.currentSummary.trim() : "";
+  if (!isContinuityLetter(current)) {
+    return {
+      error:
+        "There is no continuity letter to correct. Write the letter on its own first. Nothing was replaced.",
+    };
+  }
+  const record = readContinuityLetter(current);
+  if (record.kind === "unreadable") {
+    return {
+      error:
+        "The stored letter could not be read, so the correction was not added. Nothing was changed.",
+    };
+  }
+  const amendedAt = typeof input.amendedAt === "string" ? input.amendedAt.trim() : "";
+  if (!amendedAt || /[\r\n]/.test(amendedAt)) {
+    return { error: "The correction needs a date, so it was not added. Nothing was changed." };
+  }
+  const summary = continuityLetterSummary({
+    original: record.original,
+    amendments: [
+      ...(record.kind === "amended" ? record.amendments : []),
+      { at: amendedAt, text: letter },
+    ],
+  });
+  if (summary.length > MAX_COMPACTED_SUMMARY_CHARS) {
+    return {
+      error: `The letter and its corrections would be ${summary.length} characters. They have to stay under ${MAX_COMPACTED_SUMMARY_CHARS} so the earlier wording can stay. Nothing was changed.`,
+    };
+  }
+  return { summary, coveredSeq: null, keepCursor: true };
 }
 
 /**

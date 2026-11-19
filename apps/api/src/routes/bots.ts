@@ -43,6 +43,7 @@ import {
   BotSecretAuth,
   noneSkipped,
   resolveBotAvatarSet,
+  roomRatioError,
   VaultPolicy,
   vaultImportLogin,
   vaultImportOrigin,
@@ -445,6 +446,11 @@ export function botsRoutes(ctx: RouterContext) {
         if (!modelChange.ok) throw new ORPCError("BAD_REQUEST", { message: modelChange.error });
         const thinkingLevel = input.thinkingLevel;
         if (!existing.thread) throw new IsolationError();
+        const ratioError = roomRatioError(
+          input.roomNoticeRatio !== undefined ? input.roomNoticeRatio : existing.roomNoticeRatio,
+          input.roomUrgentRatio !== undefined ? input.roomUrgentRatio : existing.roomUrgentRatio,
+        );
+        if (ratioError) throw new ORPCError("BAD_REQUEST", { message: ratioError });
         // Picking a set on one bot pins it unless it is the owner's default, which unpins it.
         const avatarSetPinned =
           input.avatarSet === undefined
@@ -465,6 +471,10 @@ export function botsRoutes(ctx: RouterContext) {
             botProfileLabelsChanged(input) ||
             input.expectedSettings !== undefined ||
             input.dailyCheckIns !== undefined ||
+            input.voiceTone !== undefined ||
+            input.welcomeHome !== undefined ||
+            input.roomNoticeRatio !== undefined ||
+            input.roomUrgentRatio !== undefined ||
             input.replyMode !== undefined,
           expectedInstructions: input.expectedInstructions,
           expectedSettings: input.expectedSettings,
@@ -493,6 +503,14 @@ export function botsRoutes(ctx: RouterContext) {
               ? { crossSpaceCommunication: input.crossSpaceCommunication }
               : {}),
             ...(input.dailyCheckIns !== undefined ? { dailyCheckIns: input.dailyCheckIns } : {}),
+            ...(input.voiceTone !== undefined ? { voiceTone: input.voiceTone } : {}),
+            ...(input.welcomeHome !== undefined ? { welcomeHome: input.welcomeHome } : {}),
+            ...(input.roomNoticeRatio !== undefined
+              ? { roomNoticeRatio: input.roomNoticeRatio }
+              : {}),
+            ...(input.roomUrgentRatio !== undefined
+              ? { roomUrgentRatio: input.roomUrgentRatio }
+              : {}),
             ...(input.fleetManagement !== undefined
               ? { fleetManagement: input.fleetManagement }
               : {}),
