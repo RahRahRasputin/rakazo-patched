@@ -73,9 +73,9 @@ export async function loadRunHistoryMessages(
    */
   routine?: { routineId: string; earlierResults: number },
   /**
-   * Load every message after this sequence instead of the last `limit`. A continuity letter
-   * covers up to its cursor; the active chat is that letter plus everything after it. A capped
-   * tail would start past the cursor and the gap check would drop the letter.
+   * Keep the latest `limit` messages after this sequence. A continuity letter covers up to
+   * its cursor; the active chat is that letter plus the recent tail. The whole tail is not
+   * read: a later trim of an uncapped tail keeps the recent end and drops the letter.
    */
   afterSeqExclusive?: number,
 ) {
@@ -110,7 +110,7 @@ export async function loadRunHistoryMessages(
         : {}),
     },
     orderBy: { seq: "desc" },
-    ...(afterSeqExclusive == null ? { take: limit } : {}),
+    take: limit,
     select: HISTORY_MESSAGE_SELECT(run.botId),
   });
   const earlier = routine?.earlierResults

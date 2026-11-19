@@ -9,6 +9,7 @@ import type { Artifact, Prisma } from "@rakazo/db";
 import { getLogger } from "@rakazo/logging";
 import {
   privateFolderRefusal,
+  privateFolderSendRefusal,
   resolveBotWorkspacePath,
 } from "../../computers/screens/computer-support.js";
 import { generateMediaFromTool } from "../../media/media-generation-tools.js";
@@ -223,11 +224,19 @@ export async function readWorkspaceFile(
 ): Promise<{ error: string } | { bytes: Uint8Array }> {
   const { deps, bot, context } = ctx;
   if (!deps.artifacts) return { error: "artifact storage unavailable" };
+  let storedPath: string;
+  try {
+    storedPath = resolveBotWorkspacePath(ctx.computer.mode, bot.id, filePath);
+  } catch {
+    return { error: "file not found or unreadable" };
+  }
+  const room = privateFolderSendRefusal(storedPath);
+  if (room) return { error: room };
   let bytes: Uint8Array;
   try {
     bytes = await deps.sandbox.readFile(
       await ctx.computer.get("tool", call.name),
-      resolveBotWorkspacePath(ctx.computer.mode, bot.id, filePath),
+      storedPath,
       context,
       { maxBytes: deps.maxUploadSizeBytes ?? ATTACHMENT_MAX_BYTES },
     );

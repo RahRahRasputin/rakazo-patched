@@ -152,6 +152,20 @@ describe("Hermes home", () => {
     expect(JSON.stringify(result)).not.toContain("SECRET_THOUGHT");
   });
 
+  it("drops a tree whose root is PrivateFolder before the shared prefix is stripped", () => {
+    expect([
+      ...agentImportFolder([
+        "PrivateFolder/SOUL.md",
+        "PrivateFolder/workspace/SOUL.md",
+      ]).files.values(),
+    ]).toEqual([]);
+    const parsed = parseAgentImport([
+      { path: "PrivateFolder/SOUL.md", content: "SECRET_THOUGHT\n" },
+      { path: "PrivateFolder/workspace/AGENTS.md", content: "SECRET_THOUGHT\n" },
+    ]);
+    expect(JSON.stringify(parsed)).not.toContain("SECRET_THOUGHT");
+  });
+
   it("is detected from its memory folder without a root folder name", () => {
     expect(plan([{ path: "memories/USER.md", content: "Likes tea.\n" }]).source).toBe("hermes");
   });

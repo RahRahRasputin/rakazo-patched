@@ -4,6 +4,7 @@ import { getLogger } from "@rakazo/logging";
 import { loadAgentMemoryContext } from "../../memory/memory-context.js";
 import { PARTIAL_REPLY_NOTE } from "../../messaging/automated-messages.prompt.js";
 import {
+  continuityLetterReloadApplies,
   historyWindowSize,
   LEGACY_HISTORY_WINDOW_SIZE,
   letterHistoryReloadCursor,
@@ -47,7 +48,11 @@ export async function readThreadHistory(hold: RunHold, parts: { records: RunReco
     summary: thread.historyCompactionSummary,
     historyCompactedUpToSeq: thread.historyCompactedUpToSeq,
     oldestLoadedSeq,
-    applyLetter: historyReach === "all" && !messagingChannelRun,
+    applyLetter: continuityLetterReloadApplies({
+      historyReach,
+      messagingChannelRun,
+      trigger: run.trigger,
+    }),
   });
   const historyMessages =
     letterCursor == null

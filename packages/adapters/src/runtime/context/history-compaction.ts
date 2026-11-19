@@ -13,6 +13,7 @@ import { resolveDeploymentModel } from "../../models/deployment-model.js";
 import {
   CONTINUITY_LETTER_MARK,
   CONTINUITY_LETTER_MAX,
+  CONTINUITY_REVISIONS_MARK,
   continuityLetterSummary,
   historyCompactionInstructions,
   historyCompactionPrompt,
@@ -119,6 +120,14 @@ export function continuityCheckpoint(input: {
     return { error: "There is nothing to carry forward yet." };
   }
   if (append) return continuityAmendment(input, letter);
+  // The revisions block is written only by an append. A letter that opens with it would
+  // be read back as trusted corrections, and a later append would keep those entries.
+  if (letter.startsWith(CONTINUITY_REVISIONS_MARK)) {
+    return {
+      error:
+        "That opening is reserved for a correction beside a letter. Start the letter in your own words. Nothing was stored.",
+    };
+  }
   const tip = input.nextMessageSeq - 1;
   const covered = input.coveredThroughSeq === undefined ? tip : input.coveredThroughSeq;
   if (!Number.isInteger(covered) || covered > tip) {
@@ -183,9 +192,22 @@ export function continuityCoveredThrough(input: {
 }
 
 /**
- * When the loaded window starts after a continuity letter's cursor, the gap check would drop
- * the letter. The caller then loads from this cursor through the tip.
- * Routines and channel turns do not wake on the letter, so they keep their own window.
+ * An in-chat routine's reach is "all", but its first load is already limited to the owner
+ * and this resident. Reloading without that filter would bring other people's messages and
+ * channel messages into the routine. Channel turns do not wake on the letter either.
+ */
+export function continuityLetterReloadApplies(input: {
+  historyReach: string;
+  messagingChannelRun: boolean;
+  trigger: string;
+}): boolean {
+  return input.historyReach === "all" && !input.messagingChannelRun && input.trigger !== "routine";
+}
+
+/**
+ * When the loaded window starts after a continuity letter's cursor, the caller reloads the
+ * latest window after the cursor. The letter stays with that window even when the tail is
+ * longer than the window. Routines and channel turns do not wake on the letter.
  */
 export function letterHistoryReloadCursor(input: {
   summary: string | null | undefined;
@@ -253,8 +275,11 @@ export interface CompactedHistorySelection {
 
 /**
  * Uses a local summary only when the messages following its cursor are present and contiguous.
- * Otherwise the caller keeps the complete legacy window instead of silently creating a gap. A
- * message still waiting for its own run counts as present but is left out of the history.
+ * A continuity letter may stand in front of a capped tail that starts later than the cursor:
+ * the letter covers up to the cursor, and the loaded messages are the recent window. A hole
+ * inside that window still drops the summary, so a missing message is not hidden. Otherwise
+ * the caller keeps the complete legacy window instead of silently creating a gap. A message
+ * still waiting for its own run counts as present but is left out of the history.
  */
 export function selectCompactedHistory(options: {
   messages: CompactedHistoryMessage[];
@@ -270,8 +295,12 @@ export function selectCompactedHistory(options: {
   }
 
   const uncompacted = loaded.filter((message) => message.seq > cursor);
+  const letter = isContinuityLetter(summary);
   for (let index = 0; index < uncompacted.length; index += 1) {
-    if (uncompacted[index]!.seq !== cursor + index + 1) {
+    const previous = index === 0 ? undefined : uncompacted[index - 1]!.seq;
+    const expected =
+      previous === undefined ? (letter ? uncompacted[0]!.seq : cursor + 1) : previous + 1;
+    if (uncompacted[index]!.seq !== expected) {
       return { history: messages, summary: null, usedLocalSummary: false };
     }
   }

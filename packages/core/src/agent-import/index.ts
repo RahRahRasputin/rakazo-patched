@@ -145,6 +145,14 @@ export function agentImportFolder(
   const bundled = options.bundledSkills;
   const candidate = (path: string) =>
     isAgentImportCandidate(path) && !(bundled && isBundledSkill(path, bundled));
+  // A tree whose root is PrivateFolder must be dropped before the shared-prefix strip.
+  // Stripping first turns PrivateFolder/SOUL.md into SOUL.md and imports the room.
+  if (
+    paths.length > 0 &&
+    paths.every((path) => path === "PrivateFolder" || path.startsWith("PrivateFolder/"))
+  ) {
+    return { root: "", files: new Map() };
+  }
   const first = paths[0]?.split("/")[0] ?? "";
   const shared =
     first && !SOURCE_FOLDERS.has(first) && paths.every((path) => path.startsWith(`${first}/`));

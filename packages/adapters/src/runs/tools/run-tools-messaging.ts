@@ -105,6 +105,7 @@ async function savedCopies(
   for (const path of paths) {
     const file = await readWorkspaceFile(ctx, call, path);
     if ("error" in file) {
+      if (file.error === PRIVATE_FOLDER_SHARE_REFUSAL) return { error: file.error };
       // A saved copy travels alone, so a folder or raw source file has to be zipped.
       const hint = ZIP_HELPS.has(file.error) ? "; zip it and send the zip" : "";
       return { error: `${path}: ${file.error}${hint}. Nothing was sent.` };

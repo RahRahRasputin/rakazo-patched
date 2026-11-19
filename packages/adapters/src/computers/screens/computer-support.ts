@@ -215,27 +215,51 @@ export const PRIVATE_FOLDER_SHARE_REFUSAL =
   "PrivateFolder stays on your computer. Nothing was sent.";
 
 /**
+ * Collapse "." and ".." before a PrivateFolder decision. normalizeWorkspacePath throws on
+ * "..", and treating that throw as allowed is how `bots/bot-1/../bot-2/PrivateFolder` slipped
+ * through. A ".." that still remains has left the workspace and is not the actor's home.
+ */
+function collapseWorkspaceDots(value: string): string {
+  const slash = value.replace(/\\/g, "/");
+  const absolute = slash.startsWith("/");
+  const segments: string[] = [];
+  for (const segment of slash.split("/")) {
+    if (!segment || segment === ".") continue;
+    if (segment === "..") {
+      if (segments.length > 0 && segments[segments.length - 1] !== "..") segments.pop();
+      else if (!absolute) segments.push("..");
+      continue;
+    }
+    segments.push(segment);
+  }
+  const joined = segments.join("/");
+  return absolute ? `/${joined}` : joined;
+}
+
+/**
  * On a team computer, PrivateFolder is readable only under the acting resident's home.
  * A dedicated computer is that resident's home, so the folder is theirs. This is a dignity
  * boundary for ordinary paths, not a lock against a shell that never names the folder.
+ * The path is the one left after resolving "..", not the text that was typed.
  */
 export function privateFolderRefusal(
   scope: ComputerMode,
   actorBotId: string,
   storedPath: string,
 ): string | undefined {
-  let normalized: string;
-  try {
-    normalized = normalizeWorkspacePath(storedPath);
-  } catch {
-    return undefined;
-  }
-  const segments = normalized.split("/").filter(Boolean);
+  const segments = collapseWorkspaceDots(storedPath).split("/").filter(Boolean);
   const index = segments.indexOf(PRIVATE_FOLDER_NAME);
   if (index < 0 || scope !== "team") return undefined;
+  if (segments.includes("..")) return PRIVATE_FOLDER_REFUSAL;
   const parent = segments.slice(0, index).join("/");
   if (privateFolderParentAllowed(parent, actorBotId)) return undefined;
   return PRIVATE_FOLDER_REFUSAL;
+}
+
+/** A file leaving the computer: an attachment, or a copy onto another computer. */
+export function privateFolderSendRefusal(storedPath: string): string | undefined {
+  const segments = collapseWorkspaceDots(storedPath).split("/").filter(Boolean);
+  return segments.includes(PRIVATE_FOLDER_NAME) ? PRIVATE_FOLDER_SHARE_REFUSAL : undefined;
 }
 
 function privateFolderParentAllowed(parent: string, actorBotId: string): boolean {
@@ -246,9 +270,10 @@ function privateFolderParentAllowed(parent: string, actorBotId: string): boolean
 }
 
 /**
- * Relative names are the resident's own home. A command that reaches shared/ or another
- * bot's PrivateFolder is refused. A command that never writes the folder's name is not
- * inspected: obfuscation is outside this boundary.
+ * Relative names are the resident's own home. A path is resolved against the cwd, including
+ * "..", before the folder check. `cat ../bot-2/PrivateFolder/note.md` and
+ * `bots/bot-1/../bot-2/PrivateFolder` are the other resident's room. A command that never
+ * writes the folder's name is not inspected: obfuscation is outside this boundary.
  */
 export function shellPrivateFolderRefusal(
   scope: ComputerMode,
@@ -262,16 +287,33 @@ export function shellPrivateFolderRefusal(
     if (cwdRefusal) return cwdRefusal;
   }
   if (!command.includes(PRIVATE_FOLDER_NAME)) return undefined;
-  const ownId = teamBotWorkspaceDirectory(actorBotId).split("/").pop();
-  const pattern = new RegExp(
-    `(?:shared|bots\\/([^/\\s"'\`]+))\\/(?:[^/\\s"'\`]+\\/)*${PRIVATE_FOLDER_NAME}`,
-    "g",
-  );
-  for (const match of command.matchAll(pattern)) {
-    const named = match[1];
-    if (named === undefined || named !== ownId) return PRIVATE_FOLDER_REFUSAL;
+  for (const token of privateFolderCommandPaths(command)) {
+    const refusal = privateFolderRefusal(scope, actorBotId, resolveCommandPath(token, cwd));
+    if (refusal) return refusal;
   }
   return undefined;
+}
+
+function privateFolderCommandPaths(command: string): string[] {
+  const paths: string[] = [];
+  for (const match of command.matchAll(/"([^"]*)"|'([^']*)'|(\S+)/g)) {
+    const token = match[1] ?? match[2] ?? match[3] ?? "";
+    if (token.includes(PRIVATE_FOLDER_NAME)) paths.push(token);
+  }
+  return paths;
+}
+
+function resolveCommandPath(token: string, cwd?: string): string {
+  const cleaned = token.replace(/^[<>|&;]+|[<>|&;]+$/g, "").replace(/\\/g, "/");
+  const workspaceRooted =
+    cleaned.startsWith("/") ||
+    cleaned.startsWith("bots/") ||
+    cleaned.startsWith("shared/") ||
+    cleaned === "bots" ||
+    cleaned === "shared";
+  if (workspaceRooted || !cwd) return collapseWorkspaceDots(cleaned);
+  const base = cwd.replace(/\\/g, "/").replace(/\/$/, "");
+  return collapseWorkspaceDots(`${base}/${cleaned}`);
 }
 
 export { shellQuote } from "@rakazo/core/node/desktop-runtime";
