@@ -257,7 +257,7 @@ describe("Hindsight saves", () => {
         {
           content: "Prefers tea.",
           context:
-            "A fact a Rakazo AI assistant chose to remember about the people it works for and their work",
+            "A fact a Rakazo digital person chose to remember about the people it works for and their work",
           timestamp: expect.any(String),
         },
       ],
@@ -994,7 +994,7 @@ describe("Hindsight conversations", () => {
     expect(writes(fake.requests).map((request) => request.body?.items)).toEqual([
       [
         expect.objectContaining({
-          context: "Chat in Rakazo between Sam and Ada, an AI assistant",
+          context: "Chat in Rakazo between Sam and Ada, a digital person",
         }),
       ],
       [

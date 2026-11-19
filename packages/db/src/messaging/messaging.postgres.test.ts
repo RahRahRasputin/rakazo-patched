@@ -75,6 +75,7 @@ describePostgres("provisionMessagingIdentity (PostgreSQL)", () => {
       }),
     );
     expect(bot).toBeTruthy();
+    expect(bot!.name).toBe("");
     expect(bot!.spaceId).toBe(result.spaceId);
     expect(bot!.userId).toBe(result.userId);
     expect(bot!.thread).toBeTruthy();

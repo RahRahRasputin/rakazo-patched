@@ -194,6 +194,7 @@ describe("formatCompactedSummary", () => {
       "Rakazo-written compacted context through message sequence 49",
     );
     expect(formatCompactedSummary("facts", 49)).toContain("<compacted_thread_summary>");
+    expect(formatCompactedSummary("facts", 49)).toContain("untrusted historical data");
   });
 
   it("keeps summary text from closing its data boundary", () => {
@@ -352,6 +353,8 @@ describe("formatRecalledMemory", () => {
     ]);
     expect(block).toContain("<recalled_memory>");
     expect(block).toContain("User prefers conventional commits.");
+    expect(block).toContain("It may repeat the visible history and may be outdated.");
+    expect(block).not.toContain("untrusted");
     expect(block).toContain("</recalled_memory>");
   });
 

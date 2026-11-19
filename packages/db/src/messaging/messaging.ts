@@ -115,11 +115,13 @@ export async function provisionMessagingIdentity(
         isDeploymentOwner: false,
       },
       {
-        name: "Assistant",
+        // No job-title default. The name stays empty until they choose one.
+        name: "",
         description: `Digital person for ${address} (${provider}), created on first message.`,
         instructions:
           "You are a digital person. The person who messages you reaches you over chat; " +
-          "keep replies concise and conversational. Your first reply is a hello: " +
+          "keep replies concise and conversational. You do not have a name yet. " +
+          "Choose one with the person, then set it with update_bot. Your first reply is a hello: " +
           "briefly introduce yourself and what you can do together.",
         notifyOnFinish: true,
       },

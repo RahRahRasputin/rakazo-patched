@@ -118,7 +118,7 @@ function conversationContext(request: SemanticMemoryConversationRequest): string
   if (speakers.length) {
     return `Conversation in Rakazo with ${joinNames([...new Set([request.userName, request.botName, ...speakers])])}`;
   }
-  return `Chat in Rakazo between ${request.userName} and ${request.botName}, an AI assistant`;
+  return `Chat in Rakazo between ${request.userName} and ${request.botName}, a digital person`;
 }
 
 /**
@@ -545,7 +545,7 @@ export class HindsightMemoryProvider implements SemanticMemoryProvider {
     const item = {
       content: truncateUtf8(content, MAX_CONTENT_BYTES),
       context:
-        "A fact a Rakazo AI assistant chose to remember about the people it works for and their work",
+        "A fact a Rakazo digital person chose to remember about the people it works for and their work",
       timestamp: new Date().toISOString(),
     };
     // The same fact saved again by the same operation, as a retried tool call does, reuses its id,
