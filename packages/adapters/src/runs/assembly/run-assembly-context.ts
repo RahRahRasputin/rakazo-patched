@@ -13,12 +13,13 @@ import { loadBotGroupDirectory } from "../../bots/group-handoff.js";
 import { parsePlaybook } from "../../bots/teaching-session.js";
 import { lateRoutineRunInstruction } from "../../routines/routine-lateness.prompt.js";
 import { routineRunInstruction } from "../../routines/routine-run.prompt.js";
-import { contextRoomNote, contextRoomRatio } from "../../runtime/context/context-room.prompt.js";
-import { estimateContextTokens } from "../../runtime/context/context-selection.js";
 import {
-  formatCompactedSummary,
-  isContinuityLetter,
-} from "../../runtime/context/history-compaction.prompt.js";
+  activeRoomMessages,
+  contextRoomNote,
+  contextRoomRatio,
+} from "../../runtime/context/context-room.prompt.js";
+import { estimateContextTokens } from "../../runtime/context/context-selection.js";
+import { formatCompactedSummary } from "../../runtime/context/history-compaction.prompt.js";
 import { inferScript } from "../../runtime/scripted-runtime.js";
 import { partitionTools } from "../../tools/builtin-tool-bridge.js";
 import type { FleetRun } from "../../tools/fleet-tools.js";
@@ -426,21 +427,27 @@ export async function buildTurnPrompt(
       )
     : history;
   const runtimeHistory = [...historicalContext, ...historyWithImages];
+  const checkpointOffered = tools.some((tool) => tool.name === "write_checkpoint");
   let roomNote: string | undefined;
-  try {
-    roomNote = contextRoomNote({
-      name: bot.name,
-      personName,
-      ratio: contextRoomRatio({
-        tokenEstimate: estimateContextTokens(runtimeHistory) + estimateContextTokens(prompt),
-        contextWindow: resolved.contextWindow,
-        nextMessageSeq: thread.nextMessageSeq,
-        letterInstalled:
-          compactedHistory.usedLocalSummary && isContinuityLetter(compactedHistory.summary),
-      }),
-    });
-  } catch {
-    // A room warning is optional. Failing to measure the window must not stop the turn.
+  if (checkpointOffered) {
+    try {
+      roomNote = contextRoomNote({
+        name: bot.name,
+        personName,
+        ratio: contextRoomRatio({
+          tokenEstimate: estimateContextTokens(runtimeHistory) + estimateContextTokens(prompt),
+          contextWindow: resolved.contextWindow,
+          activeMessages: activeRoomMessages({
+            nextMessageSeq: thread.nextMessageSeq,
+            historyCompactedUpToSeq: thread.historyCompactedUpToSeq,
+            summary: thread.historyCompactionSummary,
+            loadedMessages: history.length,
+          }),
+        }),
+      });
+    } catch {
+      // A room warning is optional. Failing to measure the window must not stop the turn.
+    }
   }
   const turnPrompt = roomNote ? `${prompt}\n\n${roomNote}` : prompt;
   const groupDirectory = conversationThread.groupId

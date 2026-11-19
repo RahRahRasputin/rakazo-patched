@@ -268,7 +268,8 @@ describe("bot management approval cards", () => {
     const block = buildApprovalAskBlock("effect-1", "write_checkpoint", { letter }, ["sk-secret"]);
     if (block.kind !== "ask") throw new Error("expected ask block");
     expect(block.text).toBe("Read this continuity letter?");
-    expect(block.detail).toBe(letter);
+    expect(block.detail?.startsWith(letter)).toBe(true);
+    expect(block.detail).toContain("Messages that arrive while you read this stay in the chat.");
     expect(block.actions).toEqual([
       { id: "allow", label: "Wake them on this" },
       { id: "deny", label: "Keep the chat as it is" },
@@ -284,7 +285,21 @@ describe("bot management approval cards", () => {
     const undo = buildApprovalAskBlock("effect-1", "write_checkpoint", { undo: true }, []);
     if (undo.kind !== "ask") throw new Error("expected ask block");
     expect(undo.text).toBe("Bring the earlier messages back?");
+    expect(undo.detail).toContain("recent messages");
+    expect(undo.detail).toContain("search_history");
+    expect(undo.detail).not.toContain("earlier messages are back");
     expect(undo.actions?.[0]?.label).toBe("Bring them back");
+    const conflict = buildApprovalAskBlock(
+      "effect-1",
+      "write_checkpoint",
+      { undo: true, letter: "I am still me." },
+      [],
+    );
+    if (conflict.kind !== "ask") throw new Error("expected ask block");
+    expect(conflict.text).toBe("This checkpoint asks for two different things");
+    expect(conflict.detail).toContain("I am still me.");
+    expect(conflict.actions?.map((action) => action.id)).toEqual(["deny"]);
+    expect(conflict.actions?.some((action) => action.label === "Bring them back")).toBe(false);
   });
 
   it("shows the longest allowed instructions whole on the instruction card", () => {

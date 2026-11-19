@@ -4,10 +4,13 @@ import {
   HistorySearchInputSchema,
   MEMORY_INDEX_PATH,
 } from "@rakazo/contracts";
-import { readHistory, searchHistory } from "@rakazo/db";
+import { readHistory, searchHistory, storedMessageBlocks } from "@rakazo/db";
 import { redactConnectorPayload } from "../../integrations/connector-safety.js";
 import { editMemory } from "../../memory/memory-tools.js";
-import { continuityCheckpoint } from "../../runtime/context/history-compaction.js";
+import {
+  continuityCheckpoint,
+  continuityCoveredThrough,
+} from "../../runtime/context/history-compaction.js";
 import { MAX_RECALLED_MEMORIES } from "../../runtime/context/history-compaction.prompt.js";
 import { sharedMemorySaveError } from "../../tools/builtin.tool-definition.js";
 import type { RunContext } from "../assembly/run-context.js";
@@ -40,6 +43,24 @@ export function withoutBlankFields(args: Record<string, unknown>): Record<string
       ([, value]) => value !== null && !(typeof value === "string" && !value.trim()),
     ),
   );
+}
+
+/** The approval card is a bot message of this run. Messages after it are not part of the letter. */
+async function approvalCardSeq(
+  prisma: RunContext["deps"]["prisma"],
+  threadId: string,
+  runId: string,
+): Promise<number | undefined> {
+  const recent = await prisma.message.findMany({
+    where: { threadId, runId, role: "bot" },
+    orderBy: { seq: "desc" },
+    take: 20,
+    select: { id: true, seq: true, blocks: true },
+  });
+  for (const message of recent) {
+    if (storedMessageBlocks(message).some((block) => block.kind === "ask")) return message.seq;
+  }
+  return undefined;
 }
 
 async function readHistoryTool(ctx: RunContext, call: ToolCall) {
@@ -212,19 +233,29 @@ export const memoryTools: ToolHandlers = {
     }
     const fresh = await deps.prisma.thread.findUnique({
       where: { id: thread.id },
-      select: { botId: true, nextMessageSeq: true },
+      select: { botId: true, nextMessageSeq: true, historyCompactionGeneration: true },
     });
     if (!fresh || fresh.botId !== bot.id) {
       return call.finish({ error: "This chat is not yours to checkpoint." });
     }
+    const cardSeq = await approvalCardSeq(deps.prisma, thread.id, ctx.runId);
+    const coveredThroughSeq = continuityCoveredThrough({
+      nextMessageSeq: fresh.nextMessageSeq,
+      cardSeq,
+    });
     const checkpoint = continuityCheckpoint({
       letter: args.letter,
       undo: args.undo,
       nextMessageSeq: fresh.nextMessageSeq,
+      ...(coveredThroughSeq === undefined ? {} : { coveredThroughSeq }),
     });
     if ("error" in checkpoint) return call.finish({ error: checkpoint.error });
     const updated = await deps.prisma.thread.updateMany({
-      where: { id: thread.id, botId: bot.id },
+      where: {
+        id: thread.id,
+        botId: bot.id,
+        historyCompactionGeneration: fresh.historyCompactionGeneration,
+      },
       data: {
         historyCompactionSummary: checkpoint.summary,
         historyCompactedUpToSeq: checkpoint.coveredSeq,
@@ -233,14 +264,20 @@ export const memoryTools: ToolHandlers = {
       },
     });
     if (updated.count !== 1) {
-      return call.finish({ error: "This chat is not yours to checkpoint." });
+      return call.finish({
+        error:
+          "This chat changed while the letter was waiting, so it was not saved. Nothing was deleted.",
+      });
     }
+    const arrivedWhileReading = cardSeq != null && fresh.nextMessageSeq - 1 > cardSeq;
     return call.finish({
       ok: true,
       coveredThroughSeq: checkpoint.coveredSeq,
       note: checkpoint.summary
-        ? "The person read your letter and approved it. You wake on it next turn. Nothing was deleted; search_history can still read the original messages."
-        : "The person read this and approved. The earlier messages are back in the active chat. Nothing was deleted.",
+        ? arrivedWhileReading
+          ? "The person read your letter and approved it. You wake on it next turn. Messages that arrived while it was being read stay in the chat. Nothing was deleted; search_history can still read the original messages."
+          : "The person read your letter and approved it. You wake on it next turn. Nothing was deleted; search_history can still read the original messages."
+        : "The person read this and approved. The letter is no longer in the active chat. The recent messages are in view again. Nothing was deleted; search_history can still read the rest.",
     });
   },
   async save_memory(ctx, call) {

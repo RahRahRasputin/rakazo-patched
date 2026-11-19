@@ -1,10 +1,12 @@
 import { botMessageAllowsSilence, userTurnMessageForRun } from "@rakazo/core";
-import { isPartialReplyClientNonce, storedMessageBlocks } from "@rakazo/db";
+import { isPartialReplyClientNonce, loadRunHistoryMessages, storedMessageBlocks } from "@rakazo/db";
 import { getLogger } from "@rakazo/logging";
 import { loadAgentMemoryContext } from "../../memory/memory-context.js";
 import { PARTIAL_REPLY_NOTE } from "../../messaging/automated-messages.prompt.js";
 import {
   historyWindowSize,
+  LEGACY_HISTORY_WINDOW_SIZE,
+  letterHistoryReloadCursor,
   selectCompactedHistory,
 } from "../../runtime/context/history-compaction.js";
 import {
@@ -28,27 +30,55 @@ import { DELEGATED_EMPTY_NOTICE, runAllowsSilentEmpty } from "./run-replies.prom
 
 export async function readThreadHistory(hold: RunHold, parts: { records: RunRecords }) {
   const { deps, run } = hold;
-  const { bot, historyReach, messages, nonOwnerChatRun, replaysToolHistory, thread } =
-    parts.records;
+  const {
+    bot,
+    historyReach,
+    messages,
+    messagingChannelRun,
+    nonOwnerChatRun,
+    replaysToolHistory,
+    thread,
+  } = parts.records;
+  const oldestLoadedSeq = messages.reduce<number | undefined>(
+    (oldest, message) => (oldest === undefined || message.seq < oldest ? message.seq : oldest),
+    undefined,
+  );
+  const letterCursor = letterHistoryReloadCursor({
+    summary: thread.historyCompactionSummary,
+    historyCompactedUpToSeq: thread.historyCompactedUpToSeq,
+    oldestLoadedSeq,
+    applyLetter: historyReach === "all" && !messagingChannelRun,
+  });
+  const historyMessages =
+    letterCursor == null
+      ? messages
+      : await loadRunHistoryMessages(
+          deps.prisma,
+          run,
+          LEGACY_HISTORY_WINDOW_SIZE,
+          undefined,
+          undefined,
+          letterCursor,
+        );
   // Group threads and spaces several people share: who wrote each message, so the model can
   // tell the bots and the people apart. A personal space's direct chat stays plain turns.
   const people = await loadSpacePeople(
     deps.prisma,
     thread.space?._count.memberships ?? 0,
     run.userId,
-    messages,
+    historyMessages,
   );
   const speakers = await loadThreadSpeakers(
     deps.prisma,
     thread,
     { spaceId: run.spaceId, bot },
-    messages,
+    historyMessages,
     people,
   );
   const threadContext = threadContextForRun(
     run.trigger,
     {
-      messages: [...messages].reverse().map((m) => {
+      messages: [...historyMessages].reverse().map((m) => {
         const speaker = historySpeaker(speakers, m);
         // In a group, turns from several speakers are joined, so no line may pose as a label.
         const neutral = (value: string) => (speakers ? neutralizeSpeakerLabels(value) : value);

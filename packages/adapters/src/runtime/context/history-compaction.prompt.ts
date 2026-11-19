@@ -17,10 +17,7 @@ export const CONTINUITY_CONTEXT_PREFIX = "Your continuity letter through message
 export const COMPACTED_CONTEXT_PREFIX =
   "Rakazo-written compacted context through message sequence ";
 
-/**
- * Threads summarized before the wording change still start this way. Matching both keeps
- * those summaries protected instead of treating them as ordinary chat.
- */
+/** Older summaries still use this prefix; matching it keeps them protected. */
 export const LEGACY_COMPACTED_CONTEXT_PREFIX =
   "Rakazo-owned compacted context through message sequence ";
 

@@ -1632,6 +1632,24 @@ describe("userTurnInstructions", () => {
     ]);
   });
 
+  it("omits the continuity letter instruction when this run is not offered the tool", () => {
+    const text = userTurnInstructions({
+      ...base,
+      groupContext: undefined,
+      messagingContext: undefined,
+      redactedMemoryContext: undefined,
+      redactedScratchpadContext: undefined,
+      hasHistoricalContext: false,
+      agentEnvironmentInstruction: undefined,
+      botDirectory: undefined,
+      pluginLine: undefined,
+      agentSkillsLine: undefined,
+      taughtSkillsLine: undefined,
+      checkpointOffered: false,
+    }).join("\n");
+    expect(text).not.toContain("write_checkpoint");
+  });
+
   it("omits paired history guidance when either history tool is disabled", () => {
     for (const name of ["search_history", "read_history"]) {
       const text = userTurnInstructions({

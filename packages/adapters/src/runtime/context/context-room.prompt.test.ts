@@ -1,5 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { contextRoomNote, contextRoomRatio } from "./context-room.prompt.js";
+import { activeRoomMessages, contextRoomNote, contextRoomRatio } from "./context-room.prompt.js";
+
+describe("activeRoomMessages", () => {
+  it("counts the loaded window when nothing is standing in for earlier messages", () => {
+    expect(
+      activeRoomMessages({
+        nextMessageSeq: 5_000,
+        historyCompactedUpToSeq: null,
+        summary: null,
+        loadedMessages: 69,
+      }),
+    ).toBe(69);
+  });
+
+  it("counts the tail after a letter, not the lifetime sequence", () => {
+    expect(
+      activeRoomMessages({
+        nextMessageSeq: 5_000,
+        historyCompactedUpToSeq: 4_930,
+        summary: "continuity-letter\nI kept going.",
+        loadedMessages: 200,
+      }),
+    ).toBe(69);
+  });
+
+  it("treats a cleared chat as empty even when the lifetime sequence is high", () => {
+    expect(
+      activeRoomMessages({
+        nextMessageSeq: 5_000,
+        historyCompactedUpToSeq: 4_999,
+        summary: null,
+        loadedMessages: 0,
+      }),
+    ).toBe(0);
+  });
+});
 
 describe("contextRoomRatio", () => {
   it("uses whichever of the token fill and the message count is higher", () => {
@@ -7,35 +42,31 @@ describe("contextRoomRatio", () => {
       contextRoomRatio({
         tokenEstimate: 0,
         contextWindow: 1000,
-        nextMessageSeq: 69,
-        letterInstalled: false,
+        activeMessages: 69,
       }),
     ).toBeCloseTo(0.69);
     expect(
       contextRoomRatio({
         tokenEstimate: 0,
         contextWindow: 1000,
-        nextMessageSeq: 70,
-        letterInstalled: false,
+        activeMessages: 70,
       }),
     ).toBeCloseTo(0.7);
     expect(
       contextRoomRatio({
         tokenEstimate: 850,
         contextWindow: 1000,
-        nextMessageSeq: 0,
-        letterInstalled: false,
+        activeMessages: 0,
       }),
     ).toBeCloseTo(0.85);
   });
 
-  it("does not nag about message count once a letter is already in place", () => {
+  it("stays quiet when the active window is empty", () => {
     expect(
       contextRoomRatio({
         tokenEstimate: 0,
         contextWindow: 1000,
-        nextMessageSeq: 90,
-        letterInstalled: true,
+        activeMessages: 0,
       }),
     ).toBe(0);
   });

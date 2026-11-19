@@ -15,6 +15,7 @@ import {
   CONTINUITY_LETTER_MAX,
   historyCompactionInstructions,
   historyCompactionPrompt,
+  isContinuityLetter,
   MAX_COMPACTED_SUMMARY_CHARS,
 } from "./history-compaction.prompt.js";
 import {
@@ -37,7 +38,8 @@ const AUTO_COMPACTION_ON = new Set(["1", "true", "yes", "on"]);
 /**
  * Chat turns start a machine summary only when this is on. Off by default: the resident writes
  * their own letter, and a trusted person reads it, instead of the harness deciding they have
- * forgotten. A job that is already running still finishes its backlog.
+ * forgotten. The job itself also stops when this is off, so a job already queued cannot replace
+ * a letter.
  */
 export function autoCompactionEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
   const raw = env.RAKAZO_AUTO_COMPACTION;
@@ -54,6 +56,12 @@ export function continuityCheckpoint(input: {
   letter: unknown;
   undo: unknown;
   nextMessageSeq: number;
+  /**
+   * Last message the letter stands in for. Defaults to the message before `nextMessageSeq`.
+   * The approval card passes the sequence before the card, so a message written while the
+   * person is reading stays in the chat.
+   */
+  coveredThroughSeq?: number;
 }): { error: string } | { summary: string | null; coveredSeq: number | null } {
   const undo = input.undo === true;
   const letter = typeof input.letter === "string" ? input.letter.trim() : "";
@@ -72,10 +80,57 @@ export function continuityCheckpoint(input: {
   if (!Number.isInteger(input.nextMessageSeq) || input.nextMessageSeq < 1) {
     return { error: "There is nothing to carry forward yet." };
   }
+  const tip = input.nextMessageSeq - 1;
+  const covered = input.coveredThroughSeq === undefined ? tip : input.coveredThroughSeq;
+  if (!Number.isInteger(covered) || covered > tip) {
+    return { error: "The letter's place in the chat is no longer valid. Write it again." };
+  }
+  if (covered < 0) return { error: "There is nothing to carry forward yet." };
   return {
     summary: `${CONTINUITY_LETTER_MARK}${letter}`,
-    coveredSeq: input.nextMessageSeq - 1,
+    coveredSeq: covered,
   };
+}
+
+/**
+ * Last sequence a letter may cover. Messages at and after the approval card stay in the chat,
+ * including anything appended while the person is reading.
+ */
+export function continuityCoveredThrough(input: {
+  nextMessageSeq: number;
+  cardSeq?: number | null;
+}): number | undefined {
+  if (!Number.isInteger(input.nextMessageSeq) || input.nextMessageSeq < 1) return undefined;
+  const tip = input.nextMessageSeq - 1;
+  if (input.cardSeq == null || !Number.isInteger(input.cardSeq)) return tip;
+  return Math.min(tip, input.cardSeq - 1);
+}
+
+/**
+ * When the loaded window starts after a continuity letter's cursor, the gap check would drop
+ * the letter. The caller then loads from this cursor through the tip.
+ * Routines and channel turns do not wake on the letter, so they keep their own window.
+ */
+export function letterHistoryReloadCursor(input: {
+  summary: string | null | undefined;
+  historyCompactedUpToSeq: number | null | undefined;
+  oldestLoadedSeq: number | undefined;
+  applyLetter: boolean;
+}): number | undefined {
+  if (!input.applyLetter || !isContinuityLetter(input.summary)) return undefined;
+  const cursor = input.historyCompactedUpToSeq;
+  if (cursor == null || !Number.isInteger(cursor)) return undefined;
+  if (input.oldestLoadedSeq === undefined || input.oldestLoadedSeq <= cursor + 1) return undefined;
+  return cursor;
+}
+
+/** A model summary must not be stored as a resident's own letter. Only write_checkpoint mints the mark. */
+export function withoutContinuityLetterMark(text: string): string {
+  let summary = text.trim();
+  while (summary.startsWith(CONTINUITY_LETTER_MARK)) {
+    summary = summary.slice(CONTINUITY_LETTER_MARK.length).trim();
+  }
+  return summary;
 }
 
 export function shouldEnqueueCompaction(
@@ -266,6 +321,10 @@ export async function compactHistory(
 ): Promise<void> {
   const thread = await deps.prisma.thread.findUniqueOrThrow({ where: { id: threadId } });
   if (!thread.botId) return;
+  // A queued job must not run once automatic summaries are off, and must not fold a resident's
+  // letter into a machine summary or queue another batch behind it.
+  if (!autoCompactionEnabled()) return;
+  if (isContinuityLetter(thread.historyCompactionSummary?.trim())) return;
   // The member whose turn asked for the summary pays for it, as for the turn. One who has since
   // left pays nothing: the next member's turn asks again.
   if (
@@ -508,7 +567,7 @@ export async function compactHistory(
     if (event.type === "done" && event.text) {
       const text = event.text.trim();
       if (/^(?:I hit a problem:|Unknown model )/i.test(text)) runtimeReportedFailure = true;
-      else summary = text;
+      else summary = withoutContinuityLetterMark(text);
     }
   }
   if (runtimeReportedFailure) {
@@ -625,6 +684,7 @@ export async function compactHistory(
   // for a thread that accumulated thousands of messages before semantic memory was enabled would
   // otherwise leave most of that history in neither the verbatim window nor the external store.
   if (
+    autoCompactionEnabled() &&
     shouldEnqueueCompaction(
       latest.nextMessageSeq,
       latest.historyCompactedUpToSeq,

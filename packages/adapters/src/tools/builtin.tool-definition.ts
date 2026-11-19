@@ -81,7 +81,7 @@ export const agentConnectionTools: ConnectorTool[] = [
   {
     name: "connect_agent",
     description:
-      "Request a standing connection to another digital person's agent by that person's chat address. The other person must approve before either of you can message the other. Only for agents whose person messaged the deployment's chat line.",
+      "Request a standing connection to another person's agent by that person's chat address. The other person must approve before either agent can message the other. Only for agents whose person messaged the deployment's chat line.",
     inputSchema: {
       type: "object",
       properties: {

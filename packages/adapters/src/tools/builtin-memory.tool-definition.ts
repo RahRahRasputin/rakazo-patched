@@ -256,7 +256,7 @@ export const memoryTools: ConnectorTool[] = [
   {
     name: "write_checkpoint",
     description:
-      "Write a continuity letter in your own voice (I, me, my) when you want to make room in this chat. After the person reads it and approves, the active window is replaced by your letter. It does not delete messages; search_history can still read them. The letter replaces any earlier summary rather than stacking on it. Pass undo true, with no letter, to bring the earlier messages back after the same approval. Do not call this unless you choose to or the person asks.",
+      "Write a continuity letter in your own voice (I, me, my) when you want to make room in this chat. After the person reads it and approves, the active window is replaced by your letter. It does not delete messages; search_history can still read them. The letter replaces any earlier summary rather than stacking on it. Pass undo true, with no letter, to take the letter out of the active chat after the same approval. The recent messages come back into view; search_history can still read the rest. Do not pass a letter and undo together. Do not call this unless you choose to or the person asks.",
     inputSchema: {
       type: "object",
       properties: {
@@ -267,7 +267,8 @@ export const memoryTools: ConnectorTool[] = [
         },
         undo: {
           type: "boolean",
-          description: "Bring the earlier messages back into the active chat. Nothing was deleted.",
+          description:
+            "Take the letter out of the active chat. The recent messages come back into view. Nothing was deleted.",
         },
       },
     },

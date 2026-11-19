@@ -1,7 +1,7 @@
 import type { JobPublisher } from "@rakazo/adapter-kit";
 import { PiAgentRuntime } from "@rakazo/adapters";
 import type { PrismaClient } from "@rakazo/db";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { compactHistory } from "../../../adapters/src/runtime/context/history-compaction.js";
 import { startModelEmulator } from "../model-emulator.js";
 
@@ -11,6 +11,15 @@ afterEach(async () => {
 });
 
 describe("history compaction with real Pi", () => {
+  const previousAuto = process.env.RAKAZO_AUTO_COMPACTION;
+  beforeEach(() => {
+    process.env.RAKAZO_AUTO_COMPACTION = "1";
+  });
+  afterEach(() => {
+    if (previousAuto === undefined) delete process.env.RAKAZO_AUTO_COMPACTION;
+    else process.env.RAKAZO_AUTO_COMPACTION = previousAuto;
+  });
+
   it.each(["", "   "])("preserves history and retries an empty summary (%j)", async (text) => {
     const summary = "Earlier decisions and the new conversation facts.";
     const server = await startModelEmulator({

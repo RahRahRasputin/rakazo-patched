@@ -72,6 +72,12 @@ export async function loadRunHistoryMessages(
    * the latest replies of the routine's earlier runs, however far back they are.
    */
   routine?: { routineId: string; earlierResults: number },
+  /**
+   * Load every message after this sequence instead of the last `limit`. A continuity letter
+   * covers up to its cursor; the active chat is that letter plus everything after it. A capped
+   * tail would start past the cursor and the gap check would drop the letter.
+   */
+  afterSeqExclusive?: number,
 ) {
   const readableIds = routine
     ? (
@@ -85,6 +91,7 @@ export async function loadRunHistoryMessages(
   const recent = await prisma.message.findMany({
     where: {
       threadId: run.threadId,
+      ...(afterSeqExclusive == null ? {} : { seq: { gt: afterSeqExclusive } }),
       ...(readableIds ? { id: { in: readableIds } } : {}),
       ...(groupTurn
         ? {
@@ -103,7 +110,7 @@ export async function loadRunHistoryMessages(
         : {}),
     },
     orderBy: { seq: "desc" },
-    take: limit,
+    ...(afterSeqExclusive == null ? { take: limit } : {}),
     select: HISTORY_MESSAGE_SELECT(run.botId),
   });
   const earlier = routine?.earlierResults

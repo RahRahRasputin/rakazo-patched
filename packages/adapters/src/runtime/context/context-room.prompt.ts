@@ -11,12 +11,45 @@ export const ROOM_URGENT_RATIO = 0.85;
  */
 export const ROOM_MESSAGE_BUDGET = 100;
 
-/** How full the room is. A letter already in place does not count toward the message warning. */
+/**
+ * Messages actually in the active window. A clear leaves a null summary and a cursor on the
+ * lifetime tip, which is empty. A letter or machine summary counts only the tail after its cursor.
+ * Otherwise the count is the loaded window, never the lifetime sequence.
+ */
+export function activeRoomMessages(input: {
+  nextMessageSeq: number;
+  historyCompactedUpToSeq: number | null | undefined;
+  summary: string | null | undefined;
+  loadedMessages: number;
+}): number {
+  const summary = input.summary?.trim() ?? "";
+  const cursor = input.historyCompactedUpToSeq;
+  if (
+    !summary &&
+    cursor != null &&
+    Number.isInteger(cursor) &&
+    Number.isInteger(input.nextMessageSeq) &&
+    cursor >= input.nextMessageSeq - 1
+  ) {
+    return 0;
+  }
+  if (
+    summary &&
+    cursor != null &&
+    Number.isInteger(cursor) &&
+    Number.isInteger(input.nextMessageSeq)
+  ) {
+    return Math.max(0, input.nextMessageSeq - cursor - 1);
+  }
+  if (!Number.isFinite(input.loadedMessages)) return 0;
+  return Math.max(0, Math.floor(input.loadedMessages));
+}
+
+/** How full the room is, from tokens or from the active window. */
 export function contextRoomRatio(input: {
   tokenEstimate: number;
   contextWindow: number | undefined;
-  nextMessageSeq: number;
-  letterInstalled: boolean;
+  activeMessages: number;
 }): number {
   const window = input.contextWindow;
   const tokenRatio =
@@ -24,9 +57,9 @@ export function contextRoomRatio(input: {
       ? input.tokenEstimate / window
       : 0;
   const messageRatio =
-    input.letterInstalled || !Number.isFinite(input.nextMessageSeq)
+    !Number.isFinite(input.activeMessages) || input.activeMessages <= 0
       ? 0
-      : Math.max(0, input.nextMessageSeq) / ROOM_MESSAGE_BUDGET;
+      : input.activeMessages / ROOM_MESSAGE_BUDGET;
   return Math.max(tokenRatio, messageRatio);
 }
 

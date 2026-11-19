@@ -421,6 +421,11 @@ export function userTurnInstructions(parts: {
   /** Whether this turn may start a background helper (only in the bot's own app chat). */
   backgroundHelpersAllowed?: boolean;
   userComputer?: UserComputerState;
+  /**
+   * False when this run is not offered write_checkpoint. Omitted keeps the clause unless the
+   * tool is disabled, which is what the instruction catalog checks.
+   */
+  checkpointOffered?: boolean;
 }): (string | undefined)[] {
   return [
     RAKAZO_PLATFORM_INSTRUCTION,
@@ -459,11 +464,13 @@ export function userTurnInstructions(parts: {
       "archive_bot",
       "archive_bot safely archives another bot in this space. Use it when the person asks to remove that bot or when it is finished and unused. The person can restore it or permanently delete it later. confirm_name must exactly match its name.",
     ),
-    offeredBuiltinClause(
-      parts.disabledBuiltinTools,
-      "write_checkpoint",
-      "write_checkpoint writes a continuity letter in your own voice (I, me, my) when you want to make room in this chat. The person you live with reads it before you wake on it. It does not delete messages. Call it only when you choose to, or when they ask.",
-    ),
+    parts.checkpointOffered === false
+      ? undefined
+      : offeredBuiltinClause(
+          parts.disabledBuiltinTools,
+          "write_checkpoint",
+          "write_checkpoint writes a continuity letter in your own voice (I, me, my) when you want to make room in this chat. The person you live with reads it before you wake on it. It does not delete messages. Call it only when you choose to, or when they ask.",
+        ),
     fleetClause(parts.offeredFleetTools),
     parts.pluginLine,
     parts.agentSkillsLine,

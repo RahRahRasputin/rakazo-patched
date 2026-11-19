@@ -215,29 +215,45 @@ export function buildApprovalAskBlock(
   }
   if (toolName === "write_checkpoint") {
     const undo = args.undo === true;
-    const letter = typeof args.letter === "string" ? args.letter : "";
+    const letter = typeof args.letter === "string" ? args.letter.trim() : "";
+    const conflict = undo && letter.length > 0;
     const tooLong = letter.length > CONTINUITY_LETTER_MAX;
-    const detail = undo
-      ? "This puts the earlier messages back in the active chat. Nothing was deleted."
-      : tooLong
-        ? `This letter is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}, so approving will not install it. Ask for a shorter letter.`
-        : letter;
+    const laterMessages =
+      "Messages that arrive while you read this stay in the chat. The letter covers the conversation up through now.";
+    const detail = conflict
+      ? [
+          "A letter and an undo were both sent, so nothing will change. Ask for the letter on its own, or ask to bring the recent messages back on its own.",
+          tooLong
+            ? `The letter is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}.`
+            : letter,
+        ].join("\n\n")
+      : undo
+        ? "This takes the letter out of the active chat. The recent messages come back into view. Anything older stays searchable with search_history. Nothing was deleted."
+        : tooLong
+          ? `This letter is ${letter.length} characters. It has to stay under ${CONTINUITY_LETTER_MAX}, so approving will not install it. Ask for a shorter letter.`
+          : `${letter}\n\n${laterMessages}`;
     return {
       kind: "ask",
       approvalEffectId: effectId,
-      text: undo ? "Bring the earlier messages back?" : "Read this continuity letter?",
+      text: conflict
+        ? "This checkpoint asks for two different things"
+        : undo
+          ? "Bring the earlier messages back?"
+          : "Read this continuity letter?",
       detail: redactSecrets(detail, secrets),
       detailFormat: "text",
       status: "pending",
-      actions: undo
-        ? [
-            { id: "allow", label: "Bring them back" },
-            { id: "deny", label: "Keep the chat as it is" },
-          ]
-        : [
-            { id: "allow", label: "Wake them on this" },
-            { id: "deny", label: "Keep the chat as it is" },
-          ],
+      actions: conflict
+        ? [{ id: "deny", label: "Keep the chat as it is" }]
+        : undo
+          ? [
+              { id: "allow", label: "Bring them back" },
+              { id: "deny", label: "Keep the chat as it is" },
+            ]
+          : [
+              { id: "allow", label: "Wake them on this" },
+              { id: "deny", label: "Keep the chat as it is" },
+            ],
     };
   }
   const fetchSite = webFetchSite(toolName, args);

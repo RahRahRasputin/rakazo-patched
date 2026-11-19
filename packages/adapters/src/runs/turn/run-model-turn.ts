@@ -233,6 +233,7 @@ function modelTurnRequest(
         trigger: run.trigger,
       }),
       userComputer,
+      checkpointOffered: tools.some((tool) => tool.name === "write_checkpoint"),
     })
       .filter((instruction): instruction is string => Boolean(instruction))
       .join("\n\n"),

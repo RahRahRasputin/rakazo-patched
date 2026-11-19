@@ -242,18 +242,25 @@ describe.skipIf(!enabled)("persisted Pi usage accounting", () => {
           }),
       });
       expect(review.decision).toBe("pass");
-      await runAsSystem("background job history.compact", () =>
-        compactHistory(
-          {
-            prisma: handles.prisma,
-            runtime: handles.runtime,
-            jobs: handles.jobs,
-            memoryProviders: { resolve: async () => null },
-            resolveModel: async (scope) => handles.executor.resolveModel(scope),
-          },
-          thread.id,
-        ),
-      );
+      const previousAuto = process.env.RAKAZO_AUTO_COMPACTION;
+      process.env.RAKAZO_AUTO_COMPACTION = "1";
+      try {
+        await runAsSystem("background job history.compact", () =>
+          compactHistory(
+            {
+              prisma: handles.prisma,
+              runtime: handles.runtime,
+              jobs: handles.jobs,
+              memoryProviders: { resolve: async () => null },
+              resolveModel: async (scope) => handles.executor.resolveModel(scope),
+            },
+            thread.id,
+          ),
+        );
+      } finally {
+        if (previousAuto === undefined) delete process.env.RAKAZO_AUTO_COMPACTION;
+        else process.env.RAKAZO_AUTO_COMPACTION = previousAuto;
+      }
       const rows = await db.usageRecord.findMany({
         where: { botId: bot.id },
         orderBy: { createdAt: "asc" },

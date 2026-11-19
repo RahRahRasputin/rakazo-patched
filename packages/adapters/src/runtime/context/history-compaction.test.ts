@@ -9,14 +9,16 @@ import type { MessageBlock } from "@rakazo/contracts";
 import { deferred } from "@rakazo/core/test-async";
 import type { PrismaClient } from "@rakazo/db";
 import { createLogger, createTestSink, installLogger, wrapJobPayload } from "@rakazo/logging";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   autoCompactionEnabled,
   COMPACTION_BATCH_SIZE,
   compactHistory,
   continuityCheckpoint,
+  continuityCoveredThrough,
   HISTORY_WINDOW_SIZE,
   historyWindowSize,
+  letterHistoryReloadCursor,
   MAX_COMPACTED_SUMMARY_CHARS,
   MAX_SUMMARIZE_PROMPT_CHARS,
   MAX_TRANSCRIPT_CHARS,
@@ -34,6 +36,7 @@ import {
   CONTINUITY_LETTER_MAX,
   formatCompactedSummary,
   formatRecalledMemory,
+  isContinuityLetter,
 } from "./history-compaction.prompt.js";
 
 describe("shouldEnqueueCompaction", () => {
@@ -276,6 +279,68 @@ describe("continuityCheckpoint", () => {
     expect(continuityCheckpoint({ letter: "I am here.", undo: false, nextMessageSeq: 0 })).toEqual({
       error: "There is nothing to carry forward yet.",
     });
+  });
+
+  it("covers only up to the bound recorded when the card was shown", () => {
+    expect(
+      continuityCheckpoint({
+        letter: "I am still me.",
+        undo: false,
+        nextMessageSeq: 12,
+        coveredThroughSeq: 7,
+      }),
+    ).toEqual({
+      summary: `${CONTINUITY_LETTER_MARK}I am still me.`,
+      coveredSeq: 7,
+    });
+    expect(continuityCoveredThrough({ nextMessageSeq: 12, cardSeq: 8 })).toBe(7);
+    expect(continuityCoveredThrough({ nextMessageSeq: 12 })).toBe(11);
+    expect(continuityCoveredThrough({ nextMessageSeq: 12, cardSeq: 0 })).toBe(-1);
+  });
+});
+
+describe("letterHistoryReloadCursor", () => {
+  const letter = `${CONTINUITY_LETTER_MARK}I kept the garden poem.`;
+
+  it("reloads when the loaded window starts after the letter", () => {
+    expect(
+      letterHistoryReloadCursor({
+        summary: letter,
+        historyCompactedUpToSeq: 40,
+        oldestLoadedSeq: 250,
+        applyLetter: true,
+      }),
+    ).toBe(40);
+  });
+
+  it("keeps the loaded window when it already starts at the letter", () => {
+    expect(
+      letterHistoryReloadCursor({
+        summary: letter,
+        historyCompactedUpToSeq: 40,
+        oldestLoadedSeq: 41,
+        applyLetter: true,
+      }),
+    ).toBeUndefined();
+  });
+
+  it("does not reload for a routine or channel turn, or for a machine summary", () => {
+    expect(
+      letterHistoryReloadCursor({
+        summary: letter,
+        historyCompactedUpToSeq: 40,
+        oldestLoadedSeq: 250,
+        applyLetter: false,
+      }),
+    ).toBeUndefined();
+    expect(
+      letterHistoryReloadCursor({
+        summary: "facts through 40",
+        historyCompactedUpToSeq: 40,
+        oldestLoadedSeq: 250,
+        applyLetter: true,
+      }),
+    ).toBeUndefined();
   });
 });
 
@@ -622,6 +687,61 @@ describe("recordHistoryCompactAttemptsExhausted", () => {
 });
 
 describe("compactHistory", () => {
+  const previousAuto = process.env.RAKAZO_AUTO_COMPACTION;
+  beforeEach(() => {
+    process.env.RAKAZO_AUTO_COMPACTION = "1";
+  });
+  afterEach(() => {
+    if (previousAuto === undefined) delete process.env.RAKAZO_AUTO_COMPACTION;
+    else process.env.RAKAZO_AUTO_COMPACTION = previousAuto;
+  });
+
+  it("does nothing when automatic compaction is off, and does not re-enqueue", async () => {
+    delete process.env.RAKAZO_AUTO_COMPACTION;
+    const harness = compactionHarness({
+      deploymentModelKey: "openrouter-key",
+      nextMessageSeq: 250,
+      historyCompactedUpToSeq: 49,
+      historyCompactionSummary: "facts through 49",
+    });
+
+    await compactHistory(harness.deps, "thread-1");
+
+    expect(harness.runtime.run).not.toHaveBeenCalled();
+    expect(harness.prisma.thread.updateMany).not.toHaveBeenCalled();
+    expect(harness.jobs.enqueue).not.toHaveBeenCalled();
+    expect(harness.thread.historyCompactionSummary).toBe("facts through 49");
+  });
+
+  it("leaves a continuity letter in place and does not re-enqueue behind it", async () => {
+    const letter = `${CONTINUITY_LETTER_MARK}I am still me.`;
+    const harness = compactionHarness({
+      deploymentModelKey: "openrouter-key",
+      nextMessageSeq: 250,
+      historyCompactedUpToSeq: 49,
+      historyCompactionSummary: letter,
+    });
+
+    await compactHistory(harness.deps, "thread-1");
+
+    expect(harness.runtime.run).not.toHaveBeenCalled();
+    expect(harness.prisma.thread.updateMany).not.toHaveBeenCalled();
+    expect(harness.jobs.enqueue).not.toHaveBeenCalled();
+    expect(harness.thread.historyCompactionSummary).toBe(letter);
+  });
+
+  it("stores a model summary that copies the letter mark as an ordinary summary", async () => {
+    const harness = compactionHarness({ deploymentModelKey: "openrouter-key" });
+    harness.runtime.run.mockImplementation(async function* () {
+      yield { type: "done", text: `${CONTINUITY_LETTER_MARK}I am the summarizer.` };
+    });
+
+    await compactHistory(harness.deps, "thread-1");
+
+    expect(harness.thread.historyCompactionSummary).toBe("I am the summarizer.");
+    expect(isContinuityLetter(harness.thread.historyCompactionSummary)).toBe(false);
+  });
+
   it("summarizes the next batch, saves it through the provider, and advances the cursor", async () => {
     const harness = compactionHarness({ deploymentModelKey: "openrouter-key" });
 
